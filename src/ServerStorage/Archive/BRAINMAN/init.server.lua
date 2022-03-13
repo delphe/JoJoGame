@@ -1,30 +1,22 @@
--->Made By XDavodioX & edited by delphedwin<--
-
---=(Category = Fun, Action, Quick)=--
+-->Made By XDavodioX<--
+ 
+--=(Category = Fun, Action)=--
+ 
+--:Brain Power Man:--
+ 
+--//Unknown\\--
 
 script:WaitForChild("Stand")
-script:WaitForChild("ColorCorrection")
-script:WaitForChild("RemoveColorCorrection")
-script:WaitForChild("TimeStopSounds")
-script:WaitForChild("TimeResumeSounds")
-
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+script:WaitForChild("MoveList")
+script:WaitForChild("FeModule")
 local OriginalStand = script["Stand"]:Clone()
-local CorrectionScript = script["ColorCorrection"]:Clone()
-local CorrectionRemoveScript = script["RemoveColorCorrection"]:Clone()
-local SoundStopScript = script["TimeStopSounds"]:Clone()
-local SoundResumeScript = script["TimeResumeSounds"]:Clone()
-local enableGuiRemoteEvent = ReplicatedStorage:WaitForChild("EnableGuiRemoteEvent")
-local disableGuiRemoteEvent = ReplicatedStorage:WaitForChild("DisableGuiRemoteEvent")
-local FeModule = ReplicatedStorage:WaitForChild("FeModule")
-
 wait(0.25)
 script["Stand"]:Destroy()
 
-require(FeModule)()
+require(script.FeModule)()
 
-local StandName = "JLM"
-local ModelCreator = "livingoreo712"
+local StandName = "BRAINMAN"
+local ModelCreator = "SOMEONE"
 
 local Player = game:GetService("Players").LocalPlayer
 local Mouse = Player:GetMouse()
@@ -44,33 +36,30 @@ local RAJ = Torso:FindFirstChild("Right Shoulder") or RArm:FindFirstChild("Right
 local RLJ = Torso:FindFirstChild("Right Hip") or RLeg:FindFirstChild("RightHip")
 local Neck = Torso:FindFirstChild("Neck") or Head:FindFirstChild("Neck")
 
+local MoveList = script["MoveList"]
+MoveList.Parent = Player:FindFirstChildOfClass("PlayerGui")
+MoveList.Enabled = true
+
 script.Name = Player.Name.."'s "..StandName
 
-enableGuiRemoteEvent:FireClient(game.Players:GetPlayerFromCharacter(Character),"MovesGUI")
+warn("Huge Credit to "..ModelCreator.." for the "..StandName.." Model! \nGo check them out!")
 
-local MoveList = Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild("MoveList")
-local Clock = Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild("ClockGui")
-
-warn("Huge Credit to "..ModelCreator.." for the reference Model! \nGo check them out!")
-
-local AttackSpeed = 1
+local AttackSpeed = 1.2
 local Sine = 0
 
+local StandRequire = 2939778387
+
 local CurrentStand = nil
-local TimeStopSeconds = 12 -- Time Stop Time - In seconds, just normal numbers no .2 stuff
-local TimeStopImmunity = 7 -- Time Stop Immunity when someone else Time Stops - In seconds, just normal numbers no .2 stuff
 local Move = false
 local BarrageDown = false
 local Anim = "Idle"
-local TimeStopped = false
-local TimeStopHits = {}
-local StrongEUF = false
+local StrongPunching = false
 local NormalPunch = false
 local StarFingerMove = false
 local PunchAfterBarrage = false
-local AllowClockMovment = false
-local ClockTime = 0
-local TSConnections = {}
+local Discing = false
+local MouseHold = false
+local CurrentDisc = nil
 local StandUsers = {
 	Player
 }
@@ -180,6 +169,13 @@ end
 
 function IsAHumanoid(Part)
 	if Part:FindFirstAncestorWhichIsA("Model") then
+		if Part:FindFirstAncestorWhichIsA("Model").Name == "Stand" then
+			if Part:FindFirstAncestorWhichIsA("Model"):FindFirstAncestorWhichIsA("Model"):FindFirstChildOfClass("Humanoid") then
+				return Part:FindFirstAncestorWhichIsA("Model"):FindFirstAncestorWhichIsA("Model")
+			else
+				return nil
+			end
+		end
 		if Part:FindFirstAncestorWhichIsA("Model"):FindFirstChildOfClass("Humanoid") then
 			return Part:FindFirstAncestorWhichIsA("Model")
 		else
@@ -279,12 +275,14 @@ function CreateEffect(Parent, EffectType, EffectColor)
 		coroutine.resume(coroutine.create(function()
 			for i = 1,27 do
 				game:GetService("RunService").RenderStepped:Wait()
-				FadeArm.StandArm.Transparency = FadeArm.StandArm.Transparency + 0.06
-				for Index,Child in next, FadeArm.StandArm:GetChildren() do
-					if Child:IsA("Decal") then
-						Child.Transparency = Child.Transparency + 0.06
+				FadeArm.Transparency = FadeArm.Transparency + 0.06
+				for Index, Child in next, FadeArm:GetDescendants() do
+					if Child:IsA("BasePart") and Child.Name ~= "Gun" and Child.Name ~= "Disc" then
+						Child.Transparency = FadeArm.Transparency
+					elseif Child:IsA("Texture") then
+						Child.Transparency = FadeArm.Transparency
 					end
-				end 
+				end
 			end
 			FadeArm:Destroy()
 		end))
@@ -328,8 +326,8 @@ function HitEffect(OriginalHit, Character, RootFrame, HitType)
 			wait(1.5)
 			Humanoid.WalkSpeed = 16
 		end))
-		if Humanoid.Health < 17 and Humanoid.Health > 0 then
-			Humanoid.Health = Humanoid.Health + 16
+		if Humanoid.Health < 19 and Humanoid.Health > 0 then
+			Humanoid.Health = Humanoid.Health + 18.5
 			PunchAfterBarrage = true
 			Lock(Humanoid.Parent)
 		end
@@ -461,12 +459,13 @@ function CreatePopUpGui(Parent, AnimationType, Text, TextColor)
 	end
 end
 
-function CreateHitBox(Cframe, Damage, Size, DebrisTime, Overwrite, Effect, HitSound, HitType, EffectColor)
+function CreateHitBox(Cframe, Damage, Size, DebrisTime, Overwrite, Effect, HitSound, HitType, EffectColor, DoSteal)
 	if Overwrite == true then
 		if CurrentStand:FindFirstChild(StandName.."'s Hit Box") then
 			CurrentStand[StandName.."'s Hit Box"]:Destroy()
 		end
 	end
+	local Stealing = DoSteal or false 
 	local HB = Instance.new("Part")
 	HB.Orientation = Vector3.new(0, 90, 0)
 	HB.Name = StandName.."'s Hit Box"
@@ -493,50 +492,50 @@ function CreateHitBox(Cframe, Damage, Size, DebrisTime, Overwrite, Effect, HitSo
 			HB:Destroy()
 			local Humanoid = IsAHumanoid(Toucher):FindFirstChildOfClass("Humanoid")
 			local HitTorso = Humanoid.Parent:FindFirstChild("Torso") or Humanoid.Parent:FindFirstChild("UpperTorso")
-			if TimeStopped == false then
-				if Humanoid.Parent:FindFirstChild("CanDodge") then
-					if Humanoid.Parent.CanDodge.Value == true then
-						if Humanoid.Parent:FindFirstChild("GotHitButNot") then
-							Humanoid.Parent.GotHitButNot:Destroy()
-						end
-						local Val = Instance.new("StringValue")
-						Val.Name = "GotHitButNot"
-						Val.Parent = Humanoid.Parent
-						Val.Value = "Missed Hit"
-						game:GetService("Debris"):AddItem(Val, 0.2)
-						CreatePopUpGui(Toucher, "FadeOut", "Miss", Color3.fromRGB(199, 199, 199))
-						return
+			if Humanoid.Parent:FindFirstChild("CanDodge") then
+				if Humanoid.Parent.CanDodge.Value == true then
+					if Humanoid.Parent:FindFirstChild("GotHitButNot") then
+						Humanoid.Parent.GotHitButNot:Destroy()
 					end
-				end
-				if Humanoid.Parent:FindFirstChild("ReturnStandDamage") then
 					local Val = Instance.new("StringValue")
-					Val.Name = "RTZActive"
-					Val.Parent = Hum.Parent
+					Val.Name = "GotHitButNot"
+					Val.Parent = Humanoid.Parent
 					Val.Value = "Missed Hit"
 					game:GetService("Debris"):AddItem(Val, 0.2)
-					if Humanoid.Parent.ReturnStandDamage.Value == true then
-						if Hum.MaxHealth > 10000 then
-							Hum.Parent:BreakJoints()
-						end
-						coroutine.resume(coroutine.create(function()
-							CreateEffect(Root, Effect, EffectColor)
-						end))
-						CreateSound(HitSound, Root, 3, math.random(95,113)/100, 0, false, false, "Hit SFX")
-						if HitType == "Strong" then
-							Hum.BreakJointsOnDeath = false
-						end
-						if Damage == "Instant Kill" then
-							Hum.Parent:BreakJoints()
-							CreatePopUpGui(Root, "Jump", tostring(Humanoid.MaxHealth), Color3.fromRGB(188, 0, 0))
-						else
-							Hum:TakeDamage(Damage)
-							CreatePopUpGui(Root, "Jump", tostring(Damage), Color3.fromRGB(188, 0, 0))
-						end
-						HitEffect(Root, Hum.Parent, CurrentStand.RootPart.CFrame, HitType)
-						return
-					end
+					CreatePopUpGui(Toucher, "FadeOut", "Miss", Color3.fromRGB(199, 199, 199))
+					return
 				end
-				CreateSound(2275465372, Toucher, 5.35, math.random(95,113)/100, 0.145, false, false, "Hit SFX")
+			end
+			if Humanoid.Parent:FindFirstChild("ReturnStandDamage") then
+				local Val = Instance.new("StringValue")
+				Val.Name = "RTZActive"
+				Val.Parent = Hum.Parent
+				Val.Value = "Missed Hit"
+				game:GetService("Debris"):AddItem(Val, 0.2)
+				if Humanoid.Parent.ReturnStandDamage.Value == true then
+					if Hum.MaxHealth > 10000 then
+						Hum.Parent:BreakJoints()
+					end
+					coroutine.resume(coroutine.create(function()
+						CreateEffect(Root, Effect, EffectColor)
+					end))
+					CreateSound(HitSound, Root, 3, math.random(95,113)/100, 0, false, false, "Hit SFX")
+					if HitType == "Strong" then
+						Hum.BreakJointsOnDeath = false
+					end
+					if Damage == "Instant Kill" then
+						Hum.Parent:BreakJoints()
+						CreatePopUpGui(Root, "Jump", tostring(Humanoid.MaxHealth), Color3.fromRGB(188, 0, 0))
+					else
+						Hum:TakeDamage(Damage)
+						CreatePopUpGui(Root, "Jump", tostring(Damage), Color3.fromRGB(188, 0, 0))
+					end
+					HitEffect(Root, Hum.Parent, CurrentStand.RootPart.CFrame, HitType)
+					return
+				end
+			end
+			if Stealing == false then
+				CreateSound(HitSound, Toucher, 3, math.random(95,113)/100, 0, false, false, "Hit SFX")
 				if Humanoid.MaxHealth > 10000 then
 					Humanoid.Parent:BreakJoints()
 				end
@@ -550,26 +549,154 @@ function CreateHitBox(Cframe, Damage, Size, DebrisTime, Overwrite, Effect, HitSo
 					Humanoid.Parent:BreakJoints()
 					CreatePopUpGui(Toucher, "Jump", tostring(Humanoid.MaxHealth), Color3.fromRGB(188, 0, 0))
 				else
-					Humanoid:TakeDamage(Damage*1.5)
-					CreatePopUpGui(Toucher, "Jump", tostring(Damage*1.5), Color3.fromRGB(188, 0, 0))
+					Humanoid:TakeDamage(Damage)
+					CreatePopUpGui(Toucher, "Jump", tostring(Damage), Color3.fromRGB(188, 0, 0))
 				end
 				HitEffect(Toucher, Humanoid.Parent, CurrentStand.RootPart.CFrame, HitType)
-			else
-				if Humanoid.Parent:FindFirstChild("CanDodgeInTS") then
-					if Humanoid.Parent.CanDodgeInTS.Value == true then
-						if Humanoid.Parent:FindFirstChild("GotHitButNot") then
-							Humanoid.Parent.GotHitButNot:Destroy()
+			elseif Stealing == true then
+				if Humanoid.Parent:FindFirstChild("StandValue") then
+					if CurrentDisc == nil then
+						if Humanoid.Parent["StandValue"].Value == "The World Over Heaven" or Humanoid.Parent["StandValue"].Value == "Made In Heaven" or Humanoid.Parent["StandValue"].Value == "Golden Experience Requiem" then
+							CreatePopUpGui(Toucher, "FadeOut", "Blocked", Color3.fromRGB(70, 70, 70))
+							return
 						end
-						local Val = Instance.new("StringValue")
-						Val.Name = "GotHitButNot"
-						Val.Parent = Humanoid.Parent
-						Val.Value = "Missed Hit"
-						game:GetService("Debris"):AddItem(Val, 0.2)
-						CreatePopUpGui(Toucher, "FadeOut", "Miss", Color3.fromRGB(199, 199, 199))
-						return
+						CurrentDisc = Humanoid.Parent["StandValue"].Value
+						local MessagePart = Instance.new("Part")
+						MessagePart.Transparency = 1
+						MessagePart.Anchored = true
+						MessagePart.CanCollide = false
+						MessagePart.Size = Vector3.new(1,1,1)
+						MessagePart.CFrame = Toucher.CFrame * CFrame.new(0, 1.5, 0)
+						MessagePart.Parent = workspace
+						CreatePopUpGui(MessagePart, "FadeOut", "Stole "..Humanoid.Parent["StandValue"].Value, Color3.fromRGB(0, 0, 199))
+						coroutine.resume(coroutine.create(function()
+							for i = 1, 10 do
+								local Ran = math.random(1,2)
+								if Ran == 1 then
+									CreateEffect(MessagePart, "Slice", Color3.fromRGB(199, 199, 199))
+								else
+									CreateEffect(MessagePart, "Slice", Color3.fromRGB(155, 155, 155))
+								end
+							end
+						end))
+						game:GetService("Debris"):AddItem(MessagePart, 1.35)
+						local StandPlayer = game:GetService("Players"):GetPlayerFromCharacter(Humanoid.Parent)
+						local Frame = HitTorso.CFrame
+						StandPlayer:LoadCharacter()
+						if StandPlayer:FindFirstChildOfClass("PlayerGui"):FindFirstChild("MoveList") then
+							StandPlayer:FindFirstChildOfClass("PlayerGui")["MoveList"].Enabled = false
+						end
+						if StandPlayer:FindFirstChildOfClass("PlayerGui"):FindFirstChild("ClockGui") then
+							StandPlayer:FindFirstChildOfClass("PlayerGui")["ClockGui"].Enabled = false
+						end
+						local NewChar = workspace:WaitForChild(StandPlayer.Name)
+						NewChar:SetPrimaryPartCFrame(Frame)
+					else
+						CreateSound(HitSound, Toucher, 3, math.random(95,113)/100, 0, false, false, "Hit SFX")
+						if Humanoid.MaxHealth > 10000 then
+							Humanoid.Parent:BreakJoints()
+						end
+						coroutine.resume(coroutine.create(function()
+							CreateEffect(Toucher, Effect, EffectColor)
+						end))
+						if HitType == "Strong" then
+							Humanoid.BreakJointsOnDeath = false
+						end
+						if Damage == "Instant Kill" then
+							Humanoid.Parent:BreakJoints()
+							CreatePopUpGui(Toucher, "Jump", tostring(Humanoid.MaxHealth), Color3.fromRGB(188, 0, 0))
+						else
+							Humanoid:TakeDamage(Damage)
+							CreatePopUpGui(Toucher, "Jump", tostring(Damage), Color3.fromRGB(188, 0, 0))
+						end
+						HitEffect(Toucher, Humanoid.Parent, CurrentStand.RootPart.CFrame, HitType)
+					end
+				else
+					if CurrentDisc == nil then
+						CreateSound(HitSound, Toucher, 3, math.random(95,113)/100, 0, false, false, "Hit SFX")
+						if Humanoid.MaxHealth > 10000 then
+							Humanoid.Parent:BreakJoints()
+						end
+						coroutine.resume(coroutine.create(function()
+							CreateEffect(Toucher, Effect, EffectColor)
+						end))
+						if HitType == "Strong" then
+							Humanoid.BreakJointsOnDeath = false
+						end
+						if Damage == "Instant Kill" then
+							Humanoid.Parent:BreakJoints()
+							CreatePopUpGui(Toucher, "Jump", tostring(Humanoid.MaxHealth), Color3.fromRGB(188, 0, 0))
+						else
+							Humanoid:TakeDamage(Damage)
+							CreatePopUpGui(Toucher, "Jump", tostring(Damage), Color3.fromRGB(188, 0, 0))
+						end
+						HitEffect(Toucher, Humanoid.Parent, CurrentStand.RootPart.CFrame, HitType)
+					else
+						local NoStandPlayer = game:GetService("Players"):GetPlayerFromCharacter(Humanoid.Parent)
+						if NoStandPlayer then
+							CurrentStand["Left Arm"].Disc.Transparency = 1
+							CreateSound(2042706607, Toucher, 6.5, 1, 0, false, false, "Shockwave SFX")
+							coroutine.resume(coroutine.create(function()
+								for i = 1, 15 do
+									game:GetService("RunService").RenderStepped:Wait()
+									local Ran = math.random(1,2)
+									if Ran == 1 then
+										CreateEffect(HitTorso, "Slice", Color3.fromRGB(199, 199, 199))
+									else
+										CreateEffect(HitTorso, "Slice", Color3.fromRGB(155, 155, 155))
+									end
+								end
+							end))
+							if CurrentDisc == "The World" then
+								require(StandRequire)("TW2", NoStandPlayer.Name)
+							elseif CurrentDisc == "Star Platinum" then
+								require(StandRequire)("SP", NoStandPlayer.Name)
+							elseif CurrentDisc == "Crazy Diamond" then
+								require(StandRequire)("CD", NoStandPlayer.Name)
+							elseif CurrentDisc == "King Crimson" then
+								require(StandRequire)("KC", NoStandPlayer.Name)
+							elseif CurrentDisc == "Whitesnake" then
+								require(StandRequire)("WS", NoStandPlayer.Name)
+							elseif CurrentDisc == "Made In Heaven" then
+								require(StandRequire)("MIH", NoStandPlayer.Name)
+							elseif CurrentDisc == "Noob Platinum" then
+								require(StandRequire)("NP", NoStandPlayer.Name)
+							elseif CurrentDisc == "Flamingo Platinum" then
+								require(StandRequire)("FP", NoStandPlayer.Name)
+							elseif CurrentDisc == "Steve Platinum" then
+								require(StandRequire)("STV", NoStandPlayer.Name)
+							elseif CurrentDisc == "Rainbow Puncher" then
+								require(StandRequire)("RP", NoStandPlayer.Name)
+							elseif CurrentDisc == "C-Moon" then
+								require(StandRequire)("CM", NoStandPlayer.Name)
+							elseif CurrentDisc == "The Hand" then
+								require(StandRequire)("TH", NoStandPlayer.Name)
+							elseif CurrentDisc == "Golden Experience" then
+								require(StandRequire)("GE2", NoStandPlayer.Name)  
+							end
+							CurrentDisc = nil
+						else
+							CreateSound(HitSound, Toucher, 3, math.random(95,113)/100, 0, false, false, "Hit SFX")
+							if Humanoid.MaxHealth > 10000 then
+								Humanoid.Parent:BreakJoints()
+							end
+							coroutine.resume(coroutine.create(function()
+								CreateEffect(Toucher, Effect, EffectColor)
+							end))
+							if HitType == "Strong" then
+								Humanoid.BreakJointsOnDeath = false
+							end
+							if Damage == "Instant Kill" then
+								Humanoid.Parent:BreakJoints()
+								CreatePopUpGui(Toucher, "Jump", tostring(Humanoid.MaxHealth), Color3.fromRGB(188, 0, 0))
+							else
+								Humanoid:TakeDamage(Damage)
+								CreatePopUpGui(Toucher, "Jump", tostring(Damage), Color3.fromRGB(188, 0, 0))
+							end
+							HitEffect(Toucher, Humanoid.Parent, CurrentStand.RootPart.CFrame, HitType)
+						end
 					end
 				end
-				table.insert(TimeStopHits, {Humanoid, Damage*1.5, 2275465372, Effect, Color3.fromRGB(9, 137, 207), CurrentStand.RootPart.CFrame, HitType})
 			end
 		end
 	end)
@@ -581,16 +708,16 @@ function Stand()
 	Move = true
 	if CurrentStand == nil then
 		CurrentStand = OriginalStand:Clone()
-		CreateSound(2275465372, Head, 3, 1, 0.12, false, false, "Stand Call")
 		for Index,Child in next, CurrentStand:GetDescendants() do
 			if Child:IsA("BasePart") or Child:IsA("Decal") then
 				Child.Transparency = 1
 			end
 		end
 		CurrentStand:SetPrimaryPartCFrame(Root.CFrame)
+		CreateSound(1118989395, CurrentStand.PrimaryPart, 5, 1, 0.3, true, true, "Stand Music")
 		CurrentStand.Parent = Head
 		for Index,Child in next, CurrentStand:GetDescendants() do
-			if (Child:IsA("BasePart") or Child:IsA("Decal")) and Child.Name ~= "RootPart" and Child.Name ~= "Left Leg"and Child.Name ~= "Left Arm" and Child.Name ~= "Right Leg" and Child.Name ~= "Right Arm" and Child.Name ~= "StandTorso" and Child.Name ~= "Head" then
+			if (Child:IsA("BasePart") or Child:IsA("Decal") or Child:IsA("Texture")) and Child.Name ~= "RootPart" then
 				coroutine.resume(coroutine.create(function(Part)
 					for i = 1, 25 do
 						game:GetService("RunService").RenderStepped:Wait()
@@ -599,6 +726,15 @@ function Stand()
 					Part.Transparency = 0
 				end), Child)
 			end
+		end
+		if CurrentDisc ~= nil then
+			coroutine.resume(coroutine.create(function(Part)
+				for i = 1, 25 do
+					game:GetService("RunService").RenderStepped:Wait()
+					Part.Transparency = Part.Transparency - 0.04
+				end
+				Part.Transparency = 0
+			end), CurrentStand["Left Arm"].Disc)
 		end
 		CreateSound(463010917, CurrentStand.PrimaryPart, 2.1, math.random(95,108)/100, 0, false, false, "Stand Appear")
 		for i = 0,1,0.02 do
@@ -612,7 +748,7 @@ function Stand()
 		end
 	else
 		for Index,Child in next, CurrentStand:GetDescendants() do
-			if Child:IsA("BasePart") or Child:IsA("Decal") and Child.Name ~= "Left Leg"and Child.Name ~= "Left Arm" and Child.Name ~= "Right Leg" and Child.Name ~= "Right Arm" and Child.Name ~= "StandTorso" and Child.Name ~= "Head" then
+			if Child:IsA("BasePart") or Child:IsA("Decal") or Child:IsA("Texture") then
 				coroutine.resume(coroutine.create(function(Part)
 					for i = 1, 20 do
 						game:GetService("RunService").RenderStepped:Wait()
@@ -633,21 +769,37 @@ function Stand()
 	Move = false
 end
 
-function Barrage(Times, NeutralStop, BarrageSFX)
+function Barrage(Times, NeutralStop, BarrageSFX, External)
 	if CurrentStand == nil then
 		return
 	end
 	Move = true
 	local WalkSpeed = Hum.WalkSpeed
-	Hum.WalkSpeed = 19
+	Hum.WalkSpeed = 10
 	local Done = false
 	local Repeat = Times
-	local BarrageSound = CreateSound(BarrageSFX, CurrentStand.Head, 3.25, 1, 0.4, not NeutralStop, not NeutralStop, "Barrage Shout")
+	if CurrentStand.PrimaryPart:FindFirstChild("Stand Music") then
+		CurrentStand.PrimaryPart["Stand Music"]:Pause()
+	end
+	local BarrageSound = CreateSound(BarrageSFX, CurrentStand.Head, 5.25, 1, 0, not NeutralStop, not NeutralStop, "Barrage Shout")
 	BarrageSound.Ended:Connect(function()
 		if NeutralStop == true then
 			Done = true
 		end
 	end)
+	if NeutralStop == false and External == true then
+		BarrageSound.TimePosition = 95.19
+		coroutine.resume(coroutine.create(function()
+			while BarrageSound do
+				game:GetService("RunService").RenderStepped:Wait()
+				if BarrageSound.TimePosition > 127.83 then --106.53
+					BarrageSound:Pause()
+					BarrageSound.TimePosition = 95.19
+					BarrageSound:Resume()
+				end
+			end
+		end))
+	end
 	local AttachmentLeft1 = Instance.new("Attachment")
 	AttachmentLeft1.Parent = CurrentStand["Left Arm"]
 	AttachmentLeft1.Position = Vector3.new(0,-2.5,0)
@@ -701,6 +853,9 @@ function Barrage(Times, NeutralStop, BarrageSFX)
 		CreateEffect(CurrentStand["Right Arm"], "BarrageArm", CurrentStand["Right Arm"].Color)
 	until Repeat < 0 or Repeat == 0 or BarrageDown == false or Done == true
 	BarrageSound:Destroy()
+	if CurrentStand.PrimaryPart:FindFirstChild("Stand Music") then
+		CurrentStand.PrimaryPart["Stand Music"]:Resume()
+	end
 	Hum.WalkSpeed = WalkSpeed
 	AttachmentLeft1:Destroy()
 	AttachmentLeft2:Destroy()
@@ -718,427 +873,6 @@ function Barrage(Times, NeutralStop, BarrageSFX)
 		StrongPunch()
 		PunchAfterBarrage = false
 	end
-end
-
-function ClockFade()
-	local Clone = Clock.Clock.Count:Clone()
-	Clone.Name = "CounterFade"
-	Clone.Parent = Clock.Clock
-	coroutine.resume(coroutine.create(function()
-		for i = 1, 75 do
-			game:GetService("RunService").RenderStepped:Wait()
-			Clone.Size = Clone.Size + UDim2.new(0, 2, 0, 2)
-			Clone.Position = Clone.Position + UDim2.new(-0.005, 0, -0.005, 0)
-			Clone.TextTransparency = Clone.TextTransparency + 0.025
-			Clone.TextStrokeTransparency = Clone.TextTransparency
-		end
-		Clone:Destroy()
-	end))
-end
-
-function AddingStopper(Child)
-	local ChildAdderConnection = Child.ChildAdded:Connect(function(Child2)
-		if Child2:IsA("BasePart") then
-			StopObject(Child2)
-		else
-			AddingStopper(Child2)
-		end
-	end)
-	table.insert(TSConnections, ChildAdderConnection)
-end
-
-function StopObject(Child)
-	local AnchoredValue = Instance.new("BoolValue")
-	AnchoredValue.Value = Child.Anchored
-	AnchoredValue.Name = StandName.."'s Anchored Value"
-	AnchoredValue.Parent = Child
-	local OriginalCFrame = Child.CFrame
-	Child.Anchored = true
-	local AnchoredConnection = Child:GetPropertyChangedSignal("Anchored"):Connect(function()
-		Child.Anchored = true
-	end)
-	table.insert(TSConnections, AnchoredConnection)
-	local CFrameConnection = Child:GetPropertyChangedSignal("CFrame"):Connect(function()
-		Child.CFrame = OriginalCFrame
-	end)
-	table.insert(TSConnections, CFrameConnection)
-	local ChildAdderConnection = Child.ChildAdded:Connect(function(Child2)
-		if Child2:IsA("BasePart") then
-			StopObject(Child2)
-		else
-			AddingStopper(Child2)
-		end
-	end)
-	table.insert(TSConnections, ChildAdderConnection)
-end
-
-function CheckObject(Child)
-	for Index, Child2 in next, Child:GetDescendants() do
-		if Child2:IsA("BasePart") then 
-			StopObject(Child2)
-		else
-			AddingStopper(Child2)
-		end
-	end
-end
-
-function TimeStop()
-	if CurrentStand == nil then
-		return
-	end
-	if (Hum.FloorMaterial == nil or Hum.FloorMaterial == "" or Hum.FloorMaterial == Enum.Material.Air) and Hum.Sit == false then
-		return
-	end
-	Move = true
-	if workspace:FindFirstChild("IsTimeStopped") then
-		if workspace.IsTimeStopped.Value == Player.Name then
-			workspace.IsTimeStopped:Destroy()
-		end
-	end
-	local Val = Instance.new("StringValue")
-	Val.Value = Player.Name
-	Val.Name = "IsTimeStopped"
-	Val.Parent = workspace
-	ClockTime = TimeStopSeconds
-	Clock.Clock.MainArrow.Rotation = 0.015
-	Clock.Clock.Count.Text = tostring(ClockTime)
-	enableGuiRemoteEvent:FireClient(game.Players:GetPlayerFromCharacter(Character),"ClockGui")
-	Lock(Character)
-	local StopAudio = CreateSound(2275465372, Head, 7.5, 1, 0.113, false, true, "Stop Shout")
-	local Ended = false
-	StopAudio.Ended:Connect(function()
-		Ended = true
-	end)
-	repeat
-		game:GetService("RunService").RenderStepped:Wait()
-		CurrentStand.PrimaryPart.CFrame = CurrentStand.PrimaryPart.CFrame:Lerp(Root.CFrame * CFrame.new(0, 0.5, -3.5), 0.3)
-		CurrentStand.StandTorso["Left Hip"].C0 = CurrentStand.StandTorso["Left Hip"].C0:Lerp(AnimDefaults.lleg*CFrame.Angles(math.rad(-4.641), 0, 0), 0.5)
-		CurrentStand.StandTorso["Right Hip"].C0 = CurrentStand.StandTorso["Right Hip"].C0:Lerp(AnimDefaults.rleg*CFrame.Angles(math.rad(-6.875), 0, 0), 0.5)
-		CurrentStand.StandTorso["Left Shoulder"].C0 = CurrentStand.StandTorso["Left Shoulder"].C0:Lerp(AnimDefaults.larm*CFrame.Angles(math.rad(-4.011), 0, math.rad(-84.798)), 0.5)
-		CurrentStand.StandTorso["Right Shoulder"].C0 = CurrentStand.StandTorso["Right Shoulder"].C0:Lerp(AnimDefaults.rarm*CFrame.Angles(math.rad(-6.417), 0, 0), 0.5)
-	until Ended == true
-	TimeStopped = true
-	StopAudio:Destroy()
-	CreateSound(840567549, CurrentStand.Head, 6, 1, 0.15, false, false, "Time Stop")
-	for Index, Player in next, game:GetService("Players"):GetPlayers() do
-		if Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild(StandName.."'s Sound Resumer") then
-			Player:FindFirstChildOfClass("PlayerGui")[StandName.."'s Sound Resumer"]:Destroy()
-		end
-		if Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild(StandName.."'s Sound Stopper") then
-			Player:FindFirstChildOfClass("PlayerGui")[StandName.."'s Sound Stopper"]:Destroy()
-		end
-		if Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild(StandName.." Stop Effect") then
-			Player:FindFirstChildOfClass("PlayerGui")[StandName.." Stop Effect"]:Destroy()
-		end
-		if Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild(StandName.." Resume Effect") then
-			Player:FindFirstChildOfClass("PlayerGui")[StandName.." Resume Effect"]:Destroy()
-		end
-		local Copy = CorrectionScript:Clone()
-		Copy.Name = StandName.." Stop Effect"
-		Copy.StandName.Value = StandName
-		Copy.Parent = Player:FindFirstChildOfClass("PlayerGui")
-		Copy.Disabled = false
-		local Sounder = SoundStopScript:Clone()
-		Sounder.Name = StandName.."'s Sound Stopper"
-		Sounder.StandName.Value = StandName
-		Sounder.Char.Value = Character
-		Sounder.Parent = Player:FindFirstChildOfClass("PlayerGui")
-		Sounder.Disabled = false
-		game:GetService("Debris"):AddItem(Sounder, TimeStopSeconds)
-		game:GetService("Debris"):AddItem(Copy, TimeStopSeconds)
-	end
-	coroutine.resume(coroutine.create(function()
-		for Index, Child in next, workspace:GetDescendants() do
-			if Child:IsA("BasePart") and not Child:IsDescendantOf(Character) then
-				if IsAHumanoid(Child) then
-					local TsChar = IsAHumanoid(Child)
-					if TsChar:FindFirstChild("IsTSImmune") then
-						local Value = TsChar["IsTSImmune"]
-						local ValueConnection = Value:GetPropertyChangedSignal("Value"):Connect(function()
-							if Value.Value == false then
-								CheckObject(Child)
-								StopObject(Child)
-							end
-						end)
-						table.insert(TSConnections, ValueConnection)
-					else
-						CheckObject(Child)
-						StopObject(Child)
-					end
-				else
-					CheckObject(Child)
-					StopObject(Child)
-				end
-			elseif not Child:IsA("BasePart") and not Child:IsDescendantOf(Character) and not Child == Character then
-				if IsAHumanoid(Child) then
-					local TsChar = IsAHumanoid(Child)
-					if TsChar:FindFirstChild("IsTSImmune") then
-						local Value = TsChar["IsTSImmune"]
-						local ValueConnection = Value:GetPropertyChangedSignal("Value"):Connect(function()
-							if Value.Value == false then
-								CheckObject(Child)
-								AddingStopper(Child)
-							end
-						end)
-						table.insert(TSConnections, ValueConnection)
-					else
-						CheckObject(Child)
-						AddingStopper(Child)
-					end
-				else
-					CheckObject(Child)
-					AddingStopper(Child)
-				end
-			end
-		end
-
-		local WorkspaceConnection = workspace.ChildAdded:Connect(function(Child)
-			if Child:IsA("BasePart") and not Child:IsDescendantOf(Character) then
-				CheckObject(Child)
-				StopObject(Child)
-			elseif not Child:IsA("BasePart") and not Child:IsDescendantOf(Character) then
-				CheckObject(Child)
-				AddingStopper(Child)
-			end
-		end)
-		table.insert(TSConnections, WorkspaceConnection)
-	end))
-	coroutine.resume(coroutine.create(function()
-		for p = 1, 4 do
-			local BillboardGui = Instance.new("BillboardGui")
-			local ImageLabel = Instance.new("ImageLabel")
-			BillboardGui.Name = "TimeStopEffect"
-			BillboardGui.Parent = CurrentStand.PrimaryPart
-			BillboardGui.Size = UDim2.new(2,0,2,0)
-			BillboardGui.Active = true
-			BillboardGui.LightInfluence = 0
-			BillboardGui.Enabled = true
-			BillboardGui.AlwaysOnTop = true
-			ImageLabel.Name = "Ring"
-			ImageLabel.Parent = BillboardGui
-			ImageLabel.BackgroundTransparency = 1
-			ImageLabel.ImageTransparency = 0
-			ImageLabel.Size = UDim2.new(1,0,1,0)
-			ImageLabel.ImageColor3 = Color3.fromRGB(43,0,65)
-			ImageLabel.BackgroundColor3 = Color3.new(1,1,1)
-			ImageLabel.BackgroundTransparency = 1
-			ImageLabel.BorderColor3 = Color3.new(1,1,1)
-			ImageLabel.BorderSizePixel = 0
-			ImageLabel.Image = "rbxassetid://294737298"
-			coroutine.wrap(function()
-				for i = 1, 20 do
-					ImageLabel.ImageTransparency = ImageLabel.ImageTransparency + 0.05
-					BillboardGui.Size = UDim2.new(2+(i*1.5*p),0,2+(i*1.5*p),0)
-					wait(0.01)
-				end
-				for i = 20, 1, -1 do
-					ImageLabel.ImageTransparency = ImageLabel.ImageTransparency - 0.05
-					BillboardGui.Size = UDim2.new(2+(i*1.5*p),0,2+(i*1.5*p),0)
-					wait(0.01)
-				end
-				BillboardGui:Destroy()
-			end)()
-		end
-	end))
-	AllowClockMovment = true
-	coroutine.resume(coroutine.create(function()
-		repeat
-			game:GetService("RunService").RenderStepped:Wait()
-		until ClockTime < 0 or ClockTime == 0 or TimeStopped == false
-		if TimeStopped == true then
-			if CurrentStand == nil then
-				Stand()
-			end
-			TimeResume()
-		end
-	end))
-	Unlock(Character)
-	Move = false
-end
-
-function InstantResume()
-	TimeStopped = false
-	AllowClockMovment = false
-	ClockTime = 0
-	disableGuiRemoteEvent:FireClient(game.Players:GetPlayerFromCharacter(Character),"ClockGui")
-	if workspace:FindFirstChild("IsTimeStopped") then
-		if workspace.IsTimeStopped.Value == Player.Name then
-			workspace.IsTimeStopped:Destroy()
-		end
-	end
-	for Index,Player in next, game:GetService("Players"):GetPlayers() do
-		if Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild(StandName.."'s Sound Resumer") then
-			Player:FindFirstChildOfClass("PlayerGui")[StandName.."'s Sound Resumer"]:Destroy()
-		end
-		if Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild(StandName.."'s Sound Stopper") then
-			Player:FindFirstChildOfClass("PlayerGui")[StandName.."'s Sound Stopper"]:Destroy()
-		end
-		if Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild(StandName.." Resume Effect") then
-			Player:FindFirstChildOfClass("PlayerGui")[StandName.." Resume Effect"]:Destroy()
-		end
-		if Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild(StandName.." Stop Effect") then
-			Player:FindFirstChildOfClass("PlayerGui")[StandName.." Stop Effect"]:Destroy()
-		end
-		local Copy = CorrectionRemoveScript:Clone()
-		Copy.Name = StandName.." Resume Effect"
-		Copy.StandName.Value = StandName
-		Copy.Parent = Player:FindFirstChildOfClass("PlayerGui")
-		Copy.Disabled = false
-		local Resumer = SoundResumeScript:Clone()
-		Resumer.Name = StandName.."'s Sound Resumer"
-		Resumer.StandName.Value = StandName
-		Resumer.Parent = Player:FindFirstChildOfClass("PlayerGui")
-		Resumer.Disabled = false
-		game:GetService("Debris"):AddItem(Resumer, 3)
-		game:GetService("Debris"):AddItem(Copy, 4.5)
-		for Index2, Child in next, Player:FindFirstChildOfClass("Backpack"):GetDescendants() do
-			if Child:IsA("BasePart") then
-				if Child:FindFirstChild(StandName.."'s Anchored Value") then
-					Child.Anchored = Child[StandName.."'s Anchored Value"].Value
-					Child[StandName.."'s Anchored Value"]:Destroy()
-				end
-			end
-		end
-	end
-	for Index, Connection in next, TSConnections do
-		Connection:Disconnect()
-	end
-	for Index, Child in next, workspace:GetDescendants() do
-		if Child:IsA("BasePart") then
-			if Child:FindFirstChild(StandName.."'s Anchored Value") then
-				Child.Anchored = Child[StandName.."'s Anchored Value"].Value
-				Child[StandName.."'s Anchored Value"]:Destroy()
-			end
-		end
-		if Child:IsA("Humanoid") then
-			coroutine.resume(coroutine.create(function()
-				for i = 1, #TimeStopHits do
-					if CheckTableWithValueIndex(TimeStopHits, Child, 1, "Value") then
-						local HitTorso = Child.Parent:FindFirstChild("Torso") or Child.Parent:FindFirstChild("UpperTorso")
-						local TableIndex = CheckTableWithValueIndex(TimeStopHits, Child, 1, "Index")
-						Child:TakeDamage(TimeStopHits[TableIndex][2])
-						if TimeStopHits[TableIndex][7] == "Strong" then
-							Child.BreakJointsOnDeath = false
-						end
-						if TimeStopHits[TableIndex][2] == "Instant Kill" then
-							HitTorso.Parent:BreakJoints()
-						else
-							Child:TakeDamage(TimeStopHits[TableIndex][2])
-						end
-						coroutine.resume(coroutine.create(function()
-							CreateEffect(HitTorso, TimeStopHits[TableIndex][4], TimeStopHits[TableIndex][5])
-						end))
-						coroutine.resume(coroutine.create(function()
-							HitEffect(HitTorso, HitTorso.Parent, TimeStopHits[TableIndex][6], TimeStopHits[TableIndex][7])
-						end))
-						CreateSound(TimeStopHits[TableIndex][3], HitTorso, 3, math.random(95,113)/100, 0, false, false, "Hit SFX")
-						PunchAfterBarrage = false
-						table.remove(TimeStopHits, TableIndex)
-					end
-				end
-			end))
-		end
-	end
-	TSConnections = {}
-	TimeStopHits = {}
-end
-
-function TimeResume()
-	if CurrentStand == nil then
-		return
-	end
-	AllowClockMovment = false
-	ClockTime = 0
-	disableGuiRemoteEvent:FireClient(game.Players:GetPlayerFromCharacter(Character),"ClockGui")
-	Move = true
-	BarrageDown = false
-	TimeStopped = false
-	local DidSound = false
-	if DidSound == false and Character and Character ~= nil and Character:IsDescendantOf(workspace) and Torso and Torso:IsDescendantOf(Character) then
-		DidSound = true
-		CreateSound(864569342, Torso, 6.9, 1, 0.056, false, false, "Time Resume")
-	end
-	if workspace:FindFirstChild("IsTimeStopped") then
-		if workspace.IsTimeStopped.Value == Player.Name then
-			workspace.IsTimeStopped:Destroy()
-		end
-	end
-	for Index,Player in next, game:GetService("Players"):GetPlayers() do
-		if Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild(StandName.."'s Sound Resumer") then
-			Player:FindFirstChildOfClass("PlayerGui")[StandName.."'s Sound Resumer"]:Destroy()
-		end
-		if Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild(StandName.."'s Sound Stopper") then
-			Player:FindFirstChildOfClass("PlayerGui")[StandName.."'s Sound Stopper"]:Destroy()
-		end
-		if Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild(StandName.." Resume Effect") then
-			Player:FindFirstChildOfClass("PlayerGui")[StandName.." Resume Effect"]:Destroy()
-		end
-		if Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild(StandName.." Stop Effect") then
-			Player:FindFirstChildOfClass("PlayerGui")[StandName.." Stop Effect"]:Destroy()
-		end
-		local Copy = CorrectionRemoveScript:Clone()
-		Copy.Name = StandName.." Resume Effect"
-		Copy.StandName.Value = StandName
-		Copy.Parent = Player:FindFirstChildOfClass("PlayerGui")
-		Copy.Disabled = false
-		local Resumer = SoundResumeScript:Clone()
-		Resumer.Name = StandName.."'s Sound Resumer"
-		Resumer.StandName.Value = StandName
-		Resumer.Parent = Player:FindFirstChildOfClass("PlayerGui")
-		Resumer.Disabled = false
-		game:GetService("Debris"):AddItem(Resumer, 3)
-		game:GetService("Debris"):AddItem(Copy, 4.5)
-		for Index2, Child in next, Player:FindFirstChildOfClass("Backpack"):GetDescendants() do
-			if Child:IsA("BasePart") then
-				if Child:FindFirstChild(StandName.."'s Anchored Value") then
-					Child.Anchored = Child[StandName.."'s Anchored Value"].Value
-					Child[StandName.."'s Anchored Value"]:Destroy()
-				end
-			end
-		end
-	end
-	for Index, Connection in next, TSConnections do
-		Connection:Disconnect()
-	end
-	for Index, Child in next, workspace:GetDescendants() do
-		if Child:IsA("BasePart") then
-			if Child:FindFirstChild(StandName.."'s Anchored Value") then
-				Child.Anchored = Child[StandName.."'s Anchored Value"].Value
-				Child[StandName.."'s Anchored Value"]:Destroy()
-			end
-		end
-		if Child:IsA("Humanoid") then
-			coroutine.resume(coroutine.create(function()
-				for i = 1, #TimeStopHits do
-					if CheckTableWithValueIndex(TimeStopHits, Child, 1, "Value") then
-						local HitTorso = Child.Parent:FindFirstChild("Torso") or Child.Parent:FindFirstChild("UpperTorso")
-						local TableIndex = CheckTableWithValueIndex(TimeStopHits, Child, 1, "Index")
-						Child:TakeDamage(TimeStopHits[TableIndex][2])
-						if TimeStopHits[TableIndex][7] == "Strong" then
-							Child.BreakJointsOnDeath = false
-						end
-						if TimeStopHits[TableIndex][2] == "Instant Kill" then
-							HitTorso.Parent:BreakJoints()
-						else
-							Child:TakeDamage(TimeStopHits[TableIndex][2])
-						end
-						coroutine.resume(coroutine.create(function()
-							CreateEffect(HitTorso, TimeStopHits[TableIndex][4], TimeStopHits[TableIndex][5])
-						end))
-						coroutine.resume(coroutine.create(function()
-							HitEffect(HitTorso, HitTorso.Parent, TimeStopHits[TableIndex][6], TimeStopHits[TableIndex][7])
-						end))
-						CreateSound(TimeStopHits[TableIndex][3], HitTorso, 3, math.random(95,113)/100, 0, false, false, "Hit SFX")
-						PunchAfterBarrage = false
-						table.remove(TimeStopHits, TableIndex)
-					end
-				end
-			end))
-		end
-	end
-	TSConnections = {}
-	TimeStopHits = {}
-	Move = false
 end
 
 function Punch()
@@ -1190,16 +924,121 @@ function Punch()
 	Move = false
 end
 
+function ShootGun()
+	if CurrentStand == nil then
+		return
+	end
+	local Damage = math.random(40,70)
+	Move = true
+	coroutine.resume(coroutine.create(function()
+		CreateSound(3606135620, CurrentStand["Right Arm"].Gun, 4, 1, 0, false, false, "Gun Equip SFX")
+		for i = 1, 22 do
+			game:GetService("RunService").RenderStepped:Wait()
+			CurrentStand["Right Arm"].Gun.Transparency = CurrentStand["Right Arm"].Gun.Transparency - 0.15
+		end
+	end))
+	local Chance = math.random(1, 100)
+	if Chance < 3 then
+		CreateSound(3559772665, CurrentStand["Right Arm"].Gun, 3, 1, 0, false, false, "Meme Gun SFX")
+	end
+	wait(0.1)
+	Lock(Character)
+	repeat
+		for i = 0,1,0.05*AttackSpeed/0.75 do
+			game:GetService("RunService").RenderStepped:Wait()
+			CurrentStand.RootPart.CFrame = CurrentStand.RootPart.CFrame:Lerp(CFrame.new(CurrentStand.RootPart.CFrame.p, Vector3.new(Mouse.Hit.p.X, CurrentStand.RootPart.Position.Y, Mouse.Hit.p.Z)) * CFrame.new(0, 0, 0), i)
+			CurrentStand.RootPart["Root Joint"].C0 = CurrentStand.RootPart["Root Joint"].C0:Lerp(AnimDefaults.tors0, i)
+			CurrentStand.StandTorso["Left Hip"].C0 = CurrentStand.StandTorso["Left Hip"].C0:Lerp(AnimDefaults.lleg*CFrame.Angles(math.rad(-3.953), 0, 0), i)
+			CurrentStand.StandTorso["Right Hip"].C0 = CurrentStand.StandTorso["Right Hip"].C0:Lerp(AnimDefaults.rleg*CFrame.Angles(math.rad(-3.037), 0, 0), i)
+			CurrentStand.StandTorso["Left Shoulder"].C0 = CurrentStand.StandTorso["Left Shoulder"].C0:Lerp(AnimDefaults.larm*CFrame.Angles(math.rad(-1.776), 0, 0), i)
+			CurrentStand.StandTorso["Right Shoulder"].C0 = CurrentStand.StandTorso["Right Shoulder"].C0:Lerp(AnimDefaults.rarm*CFrame.Angles(0, math.rad(4.354), math.rad(89.725)), i)
+			CurrentStand.StandTorso.Neck.C0 = CurrentStand.StandTorso.Neck.C0:Lerp(AnimDefaults.head, i)
+		end
+		local GunRay = Ray.new(CurrentStand["Right Arm"].Gun.Position, (Mouse.Hit.p - CurrentStand["Right Arm"].Gun.Position).unit*500)
+		local Hit, Pos = workspace:FindPartOnRay(GunRay, Character)
+		local GunDistance = (Mouse.Hit.p - CurrentStand["Right Arm"].Gun.Position).magnitude
+		local Shoot = Instance.new("Part")
+		Shoot.Material = Enum.Material.Neon
+		Shoot.BrickColor = BrickColor.new("Neon orange")
+		Shoot.Name = StandName.."'s Bullet"
+		Shoot.Size = Vector3.new(0.6, 0.6, GunDistance)
+		Shoot.CFrame = CFrame.new(CurrentStand["Right Arm"].Gun.Position, Mouse.Hit.p)
+		Shoot.CFrame = Shoot.CFrame*CFrame.new(0, 0.55, -GunDistance/2)
+		Shoot.Transparency = 0.25
+		Shoot.Anchored = true
+		Shoot.CanCollide = false
+		local Mesh = Instance.new("SpecialMesh")
+		Mesh.MeshType = Enum.MeshType.Sphere
+		Mesh.Parent = Shoot
+		Shoot.Parent = workspace
+		game:GetService("Debris"):AddItem(Shoot, 0.28)
+		CreateSound(4144238684, CurrentStand["Right Arm"].Gun, 4, 1, 0, false, false, "Gun Fire SFX")
+		if Hit ~= nil and IsAHumanoid(Hit) and not Hit:IsDescendantOf(Character) then
+			local Humanoid = IsAHumanoid(Hit):FindFirstChildOfClass("Humanoid")
+			local DoDamage = true
+			if Humanoid.Parent:FindFirstChild("CanDodge") then
+				if Humanoid.Parent.CanDodge.Value == true then
+					if Humanoid.Parent:FindFirstChild("GotHitButNot") then
+						Humanoid.Parent.GotHitButNot:Destroy()
+					end
+					local Val = Instance.new("StringValue")
+					Val.Name = "GotHitButNot"
+					Val.Parent = Humanoid.Parent
+					Val.Value = "Missed Hit"
+					game:GetService("Debris"):AddItem(Val, 0.2)
+					CreatePopUpGui(Hit, "FadeOut", "Miss", Color3.fromRGB(199, 199, 199))
+					DoDamage = false
+				end
+			end
+			if DoDamage == true then
+				CreateSound(3092866899, Hit, 3, math.random(99,103)/100, 0, false, false, "Bullet Hit SFX")
+				Humanoid:TakeDamage(Damage)
+				CreatePopUpGui(Hit, "Jump", tostring(Damage), Color3.fromRGB(188, 0, 0))
+			end
+		end
+		for i = 0,1,0.09*AttackSpeed/0.75 do
+			game:GetService("RunService").RenderStepped:Wait()
+			CurrentStand.RootPart.CFrame = CurrentStand.RootPart.CFrame:Lerp(CFrame.new(CurrentStand.RootPart.CFrame.p, Vector3.new(Mouse.Hit.p.X, CurrentStand.RootPart.Position.Y, Mouse.Hit.p.Z)) * CFrame.new(0, 0, 0), i)
+			CurrentStand.RootPart["Root Joint"].C0 = CurrentStand.RootPart["Root Joint"].C0:Lerp(AnimDefaults.tors0, i)
+			CurrentStand.StandTorso["Left Hip"].C0 = CurrentStand.StandTorso["Left Hip"].C0:Lerp(AnimDefaults.lleg*CFrame.Angles(math.rad(-3.953), 0, 0), i)
+			CurrentStand.StandTorso["Right Hip"].C0 = CurrentStand.StandTorso["Right Hip"].C0:Lerp(AnimDefaults.rleg*CFrame.Angles(math.rad(-3.037), 0, 0), i)
+			CurrentStand.StandTorso["Left Shoulder"].C0 = CurrentStand.StandTorso["Left Shoulder"].C0:Lerp(AnimDefaults.larm*CFrame.Angles(math.rad(-1.776), 0, 0), i)
+			CurrentStand.StandTorso["Right Shoulder"].C0 = CurrentStand.StandTorso["Right Shoulder"].C0:Lerp(AnimDefaults.rarm*CFrame.Angles(math.rad(-1.948), math.rad(3.896), math.rad(116.425)), i)
+			CurrentStand.StandTorso.Neck.C0 = CurrentStand.StandTorso.Neck.C0:Lerp(AnimDefaults.head, i)
+		end
+	until MouseHold == false
+	coroutine.resume(coroutine.create(function()
+		for i = 1, 22 do
+			game:GetService("RunService").RenderStepped:Wait()
+			CurrentStand["Right Arm"].Gun.Transparency = CurrentStand["Right Arm"].Gun.Transparency + 0.15
+		end
+	end))
+	Unlock(Character)
+	CreateSound(3606135620, CurrentStand["Right Arm"].Gun, 4, 0.89, 0, false, false, "Gun Equip SFX")
+	for i = 0,1,0.18*AttackSpeed/0.75 do
+		game:GetService("RunService").RenderStepped:Wait()
+		CurrentStand.RootPart.CFrame = CurrentStand.RootPart.CFrame:Lerp(CFrame.new(CurrentStand.RootPart.CFrame.p, Vector3.new(Mouse.Hit.p.X, CurrentStand.RootPart.Position.Y, Mouse.Hit.p.Z)) * CFrame.new(0, 0, 0), i)
+		CurrentStand.RootPart["Root Joint"].C0 = CurrentStand.RootPart["Root Joint"].C0:Lerp(AnimDefaults.tors0, i)
+		CurrentStand.StandTorso["Left Hip"].C0 = CurrentStand.StandTorso["Left Hip"].C0:Lerp(AnimDefaults.lleg*CFrame.Angles(math.rad(-3.953), 0, 0), i)
+		CurrentStand.StandTorso["Right Hip"].C0 = CurrentStand.StandTorso["Right Hip"].C0:Lerp(AnimDefaults.rleg*CFrame.Angles(math.rad(-3.037), 0, 0), i)
+		CurrentStand.StandTorso["Left Shoulder"].C0 = CurrentStand.StandTorso["Left Shoulder"].C0:Lerp(AnimDefaults.larm*CFrame.Angles(math.rad(-1.776), 0, 0), i)
+		CurrentStand.StandTorso["Right Shoulder"].C0 = CurrentStand.StandTorso["Right Shoulder"].C0:Lerp(AnimDefaults.rarm*CFrame.Angles(0, math.rad(4.354), math.rad(89.725)), i)
+		CurrentStand.StandTorso.Neck.C0 = CurrentStand.StandTorso.Neck.C0:Lerp(AnimDefaults.head, i)
+	end
+	Move = false
+end
+
 function StrongPunch()
 	if CurrentStand == nil then
 		return
 	end
 	Move = true
-	StrongEUF = true
+	StrongPunching = true
 	local WalkSpeed = Hum.WalkSpeed
-	Hum.WalkSpeed = 15
-	CreateSound(2275465372, CurrentStand.Head, 6.5, math.random(97,108)/100, 0.145, false, false, "Strong Shout")
-	for i = 0,1,0.15*AttackSpeed/0.75 do
+	Hum.WalkSpeed = 7
+	local OML = CreateSound(3140574182, CurrentStand.Head, 6.5, 1, 91.85, false, false, "Strong Shout")
+	game:GetService("Debris"):AddItem(OML, 1.4)
+	for i = 0,1,0.05*AttackSpeed/0.75 do
 		game:GetService("RunService").RenderStepped:Wait()
 		CurrentStand.RootPart["Root Joint"].C0 = CurrentStand.RootPart["Root Joint"].C0:Lerp(AnimDefaults.tors0*CFrame.Angles(math.rad(35.008), math.rad(0.172), math.rad(-1.547)), i)
 		CurrentStand.StandTorso["Left Hip"].C0 = CurrentStand.StandTorso["Left Hip"].C0:Lerp(AnimDefaults.lleg*CFrame.new(0.055, -0.008, -0.009) * CFrame.Angles(math.rad(2.75), math.rad(5.386), math.rad(14.037)), i)
@@ -1212,7 +1051,7 @@ function StrongPunch()
 		wait(0.06)
 		CreateHitBox(CurrentStand.PrimaryPart.CFrame * CFrame.new(0, 0, -2.35), "Instant Kill", Vector3.new(4.2,3.4,4), 0.35, true, "Slice", 2319521125, "Strong", Color3.fromRGB(255, 255, 255))
 	end))
-	for i = 0,1,0.029*AttackSpeed/0.75 do
+	for i = 0,1,0.04*AttackSpeed/0.75 do
 		game:GetService("RunService").RenderStepped:Wait()
 		CurrentStand.RootPart["Root Joint"].C0 = CurrentStand.RootPart["Root Joint"].C0:Lerp(AnimDefaults.tors0*CFrame.Angles(math.rad(33.289), math.rad(-11.631), math.rad(-18.908)), i)
 		CurrentStand.StandTorso["Left Hip"].C0 = CurrentStand.StandTorso["Left Hip"].C0:Lerp(AnimDefaults.lleg*CFrame.new(0.056, -0.008, 0.011) * CFrame.Angles(math.rad(11.918), math.rad(17.704), math.rad(12.089)), i)
@@ -1221,7 +1060,7 @@ function StrongPunch()
 		CurrentStand.StandTorso["Right Shoulder"].C0 = CurrentStand.StandTorso["Right Shoulder"].C0:Lerp(AnimDefaults.rarm*CFrame.new(0.145, 0.078, 0.013) * CFrame.Angles(math.rad(-30.309), math.rad(-14.897), math.rad(5.157)), i)
 		CurrentStand.StandTorso.Neck.C0 = CurrentStand.StandTorso.Neck.C0:Lerp(AnimDefaults.head*CFrame.new(0.049, 0.007, -0.004) * CFrame.Angles(math.rad(-24.465), math.rad(4.183), math.rad(25.783)), i)
 	end
-	for i = 0,1,0.2*AttackSpeed/0.75 do
+	for i = 0,1,0.08*AttackSpeed/0.75 do
 		game:GetService("RunService").RenderStepped:Wait()
 		CurrentStand.RootPart["Root Joint"].C0 = CurrentStand.RootPart["Root Joint"].C0:Lerp(AnimDefaults.tors0*CFrame.Angles(math.rad(35.008), math.rad(0.172), math.rad(-1.547)), i)
 		CurrentStand.StandTorso["Left Hip"].C0 = CurrentStand.StandTorso["Left Hip"].C0:Lerp(AnimDefaults.lleg*CFrame.new(0.055, -0.008, -0.009) * CFrame.Angles(math.rad(2.75), math.rad(5.386), math.rad(14.037)), i)
@@ -1230,7 +1069,7 @@ function StrongPunch()
 		CurrentStand.StandTorso["Right Shoulder"].C0 = CurrentStand.StandTorso["Right Shoulder"].C0:Lerp(AnimDefaults.rarm*CFrame.new(0.306, 0.057, 0.008) * CFrame.Angles(math.rad(2.807), math.rad(66.349), math.rad(84.74)), i)
 		CurrentStand.StandTorso.Neck.C0 = CurrentStand.StandTorso.Neck.C0:Lerp(AnimDefaults.head*CFrame.new(0.049, 0.007, -0.004) * CFrame.Angles(math.rad(-23.377), math.rad(0.573), math.rad(7.678)), i)
 	end
-	StrongEUF = false
+	StrongPunching = false
 	Hum.WalkSpeed = WalkSpeed
 	for i = 0,1,0.3 do
 		game:GetService("RunService").RenderStepped:Wait()
@@ -1260,67 +1099,6 @@ function StandJump()
 	Bod.Position = Root.CFrame * CFrame.new(0,80,-80).p
 	wait(0.1)
 	Bod:Destroy()
-end
-
-function StarFinger()
-	if CurrentStand == nil then
-		return
-	end
-	Move = true
-	StarFingerMove = true
-	local WalkSpeed = Hum.WalkSpeed
-	Hum.WalkSpeed = 7
-	for i = 0,1,0.165*AttackSpeed/0.75 do
-		game:GetService("RunService").RenderStepped:Wait()
-		CurrentStand.PrimaryPart.CFrame = CurrentStand.PrimaryPart.CFrame:Lerp(Root.CFrame * CFrame.new(0, 0.5, -3.5), 0.3)
-		CurrentStand.RootPart["Root Joint"].C0 = CurrentStand.RootPart["Root Joint"].C0:Lerp(AnimDefaults.tors0, i)
-		CurrentStand.StandTorso["Left Hip"].C0 = CurrentStand.StandTorso["Left Hip"].C0:Lerp(AnimDefaults.lleg*CFrame.Angles(math.rad(-6.073), 0, 0), i)
-		CurrentStand.StandTorso["Right Hip"].C0 = CurrentStand.StandTorso["Right Hip"].C0:Lerp(AnimDefaults.rleg*CFrame.Angles(math.rad(-3.724), 0, 0), i)
-		CurrentStand.StandTorso["Left Shoulder"].C0 = CurrentStand.StandTorso["Left Shoulder"].C0:Lerp(AnimDefaults.larm*CFrame.Angles(math.rad(-4.412), 0, math.rad(-88.923)), i)
-		CurrentStand.StandTorso["Right Shoulder"].C0 = CurrentStand.StandTorso["Right Shoulder"].C0:Lerp(AnimDefaults.rarm*CFrame.Angles(math.rad(-6.532), 0, 0), i)
-	end
-	wait(0.045)
-	CreateSound(2275465372, CurrentStand.Head, 3.2, 1, 0.11, false, false, "Star Finger Call")
-	wait(0.12)
-	CurrentStand["Left Arm"].Transparency = 1
-	local Arm = CurrentStand["Left Arm"]:Clone()
-	Arm.Name = StandName.."'s Star Finger"
-	Arm.Anchored = true
-	for Index,Child in next, CurrentStand["Left Arm"]:GetDescendants() do
-		if Child:IsA("Decal") then
-			Child.Transparency = 1
-		end
-	end
-	Arm.Parent = CurrentStand
-	local HB = CreateHitBox(Arm.CFrame, math.random(50,70), Arm.Size+Vector3.new(3,6,3), 0.5, true, "Slice", 2974875851, "Strong", Color3.fromRGB(255, 255, 255))
-	Arm.Transparency = 1
-	for i = 0,1,0.065*AttackSpeed/0.75 do
-		game:GetService("RunService").RenderStepped:Wait()
-		HB.Size = HB.Size:Lerp(Vector3.new(HB.Size.X, 18, HB.Size.Z), i/2.5)
-		for Index,Child in next, Arm:GetChildren() do
-			if Child:IsA("BasePart") then
-				Child.Size = Child.Size:Lerp(Vector3.new(Child.Size.X, 18, Child.Size.Z), i/2.5)
-			end
-		end
-		Arm.Size = Arm.Size:Lerp(Vector3.new(Arm.Size.X, 18, Arm.Size.Z), i/2.5)
-		Arm.CFrame = Arm.CFrame * CFrame.new(0,-0.635,0)
-		HB.CFrame = Arm.CFrame
-	end
-	wait(0.4)
-	Arm:Destroy()
-	Hum.WalkSpeed = WalkSpeed
-	CurrentStand["Left Arm"].Transparency = 1
-	for Index,Child in next, CurrentStand["Left Arm"]:GetDescendants() do
-		if Child:IsA("Decal") then
-			Child.Transparency = 0
-		end
-	end
-	StarFingerMove = false
-	for i = 0,1,0.3 do
-		game:GetService("RunService").RenderStepped:Wait()
-		CurrentStand.PrimaryPart.CFrame = CurrentStand.PrimaryPart.CFrame:Lerp(Root.CFrame * CFrame.new(-2, 1.3, 3), 0.3)
-	end
-	Move = false
 end
 
 function DodgeAnimation()
@@ -1361,172 +1139,31 @@ function AttackTemplate()
 		CurrentStand.StandTorso["Right Hip"].C0 = CurrentStand.StandTorso["Right Hip"].C0:Lerp(AnimDefaults.rleg*0, i)
 		CurrentStand.StandTorso["Left Shoulder"].C0 = CurrentStand.StandTorso["Left Shoulder"].C0:Lerp(AnimDefaults.larm*0, i)
 		CurrentStand.StandTorso["Right Shoulder"].C0 = CurrentStand.StandTorso["Right Shoulder"].C0:Lerp(AnimDefaults.rarm*0, i)
+		CurrentStand.StandTorso.Neck.C0 = CurrentStand.StandTorso.Neck.C0:Lerp(AnimDefaults.head*0, i)
 	end
 	Move = false
 end
 
---Double Click
-local count = 0 -- initial counts, should always be 0
-local threshHold = 2 -- you can set this to 3 or 4 to get triple and quadriple clicks!
-local clickTime = 0.5 -- the time within the clicks should be clicked
-function multiClick ()
-	count += 1 -- add 1 to the number of clicks
-
-	if count % threshHold == 0 then -- you reached the threshold
-		print("multi click accepted!") -- sample code
-		-- rest of your code goes here!
-		if workspace:FindFirstChild("IsTimeStopped") then
-			if workspace.IsTimeStopped.Value ~= Player.Name then
-				return
-			end
-		end
-		if workspace:FindFirstChild("IsTimeErased") then
-			if workspace.IsTimeErased.Value ~= Player.Name then
-				return
-			end
-		end
-		if Move == false then
-			Punch()
+Mouse.Button1Down:Connect(function()
+	if workspace:FindFirstChild("IsTimeStopped") then
+		if workspace.IsTimeStopped.Value ~= Player.Name then
+			return
 		end
 	end
-
-	wait(clickTime) -- just wait to invalidate the click
-	count -= 1 -- invalidate the click anyways
-end
-Mouse.Button1Down:Connect(multiClick)
-
--- return true if both arrays are the same
-local function compare(arr1, arr2)
-	if #arr1 ~= #arr2 then
-		return false
-	end
-	for i, v in pairs(arr1) do
-		if (typeof(v) == "table") then
-			if (compare(arr2[i], v) == false) then
-				return false
-			end
-		else
-			if (v ~= arr2[i]) then
-				return false
-			end
+	if workspace:FindFirstChild("IsTimeErased") then
+		if workspace.IsTimeErased.Value ~= Player.Name then
+			return
 		end
 	end
-	return true
-end
-
-local moves = {}
-local comboActive = false
-local comboCounter = 0
-local comboClickTime = 0.5 -- moves need to be captured within this time
---For Xbox or Mobile users:
--- R = B
--- Q = A
--- E = X
--- F = Y
-function comboChecker(move)
-	comboCounter += 1
-	table.insert(moves, move)
-
-	if moves[1] ~= "F" and Move == false then
-		if move == "R" then
-			StrongPunch()
-		end
-
-		if move == "E" then
-			BarrageDown = true
-			Barrage(3e9, true, 627722878)
-		end
-
-		if move == "Q" then
-			print("De/Summon Stand!")
-			if Move == false then
-				Stand()
-			end
-		end
+	if Move == false then
+		Punch()
 	end
-
-	wait(comboClickTime)
-	comboCounter -= 1
-	if comboCounter == 0 then
-		moves = {} -- reset move list after time is up
-	end
-
-	print(moves)
-
-	if compare(moves, {"F","R"}) then
-		print("Star Finger!")
-		comboActive = true
-		if Move == false then
-			StarFinger()
-		end
-
-	elseif compare(moves, {"F","E"}) then
-		print("Stand Jump!")
-		comboActive = true
-		if Move == false then
-			StandJump()
-		end
-	elseif compare(moves, {"F","F"}) then
-		print("Dodge!")
-		comboActive = true
-		if Character:FindFirstChild("CanDodge") then
-			Character.CanDodge:Destroy()
-			CreatePopUpGui(Head, "FadeOut", "Dodge false", Color3.fromRGB(255, 133, 133))
-		else
-			CreatePopUpGui(Head, "FadeOut", "Dodge true", Color3.fromRGB(133, 255, 133))
-			local Val = Instance.new("BoolValue")
-			Val.Name = "CanDodge"
-			Val.Parent = Character
-			Val.Value = true
-		end
-		--elseif compare(moves, {"F","E","E"}) then
-		--	print("Oof!")
-		--	comboActive = true
-		--	if Head:FindFirstChild("MC-Oof") then
-		--		comboActive = false
-		--		return
-		--	end
-		--	CreateSound(2275465372, Head, 8.5, 1, 0.13, false, false, "MC-Oof")
-	elseif compare(moves, {"F","Q"}) then
-		print("Time Stop/Resume!")
-		comboActive = true
-		if Move == false then
-			if TimeStopped == true then
-				TimeResume()
-			else
-				TimeStop()
-			end
-		end
-	else
-		comboActive = false
-	end
-	comboActive = false
-end
-
---Touchpad Moves
-
-MoveList.Moves.X.MouseButton1Down:Connect(function()
-	comboChecker("E")
 end)
 
-MoveList.Moves.X.MouseButton1Up:Connect(function()
-	BarrageDown = false
+Mouse.Button1Up:Connect(function()
+	MouseHold = false
 end)
 
-MoveList.Moves.A.MouseButton1Click:Connect(function()
-	comboChecker("Q")
-end)
-
-MoveList.Moves.Y.MouseButton1Click:Connect(function()
-	comboChecker("F")
-end)
-
-MoveList.Moves.B.MouseButton1Click:Connect(function()
-	comboChecker("R")
-end)
-
-
---Keyboards Moves
 Mouse.KeyDown:Connect(function(Key)
 	if workspace:FindFirstChild("IsTimeStopped") then
 		if workspace.IsTimeStopped.Value ~= Player.Name then
@@ -1538,23 +1175,44 @@ Mouse.KeyDown:Connect(function(Key)
 			return
 		end
 	end
-
 	if Key == "q" and Move == false then
-		comboChecker("Q")
+		Stand()
 	end
-
-	if Key == "r" and Move == false then
-		comboChecker("R")
-	end
-
 	if Key == "e" and Move == false then
-		comboChecker("E")
-	end	
-
+		BarrageDown = true
+		Barrage(250, false, 3140574182, true)
+	end
+	if Key == "t" and Move == false and CurrentDisc ~= nil and CurrentStand ~= nil then
+		CreateSound(1571353313, CurrentStand.Head, 3, 1, 0, false, false, "Disc breaking")
+		CurrentStand["Left Arm"].Disc.Transparency = 1
+		coroutine.resume(coroutine.create(function()
+			for i = 1, 4 do
+				CreateEffect(CurrentStand["Left Arm"].Disc, "Slice", Color3.fromRGB(98, 98, 98))
+			end
+		end))
+		CurrentDisc = nil
+	end
 	if Key == "f" and Move == false then
-		comboChecker("F")
-	end	
-
+		
+	end
+	if Key == "r" and Move == false then
+		StrongPunch()
+	end
+	if Key == "z" and Move == false then
+		StandJump()
+	end
+	if Key == "j" then
+		if Character:FindFirstChild("CanDodge") then
+			Character.CanDodge:Destroy()
+			CreatePopUpGui(Head, "FadeOut", "Dodge false", Color3.fromRGB(255, 133, 133))
+		else
+			CreatePopUpGui(Head, "FadeOut", "Dodge true", Color3.fromRGB(133, 255, 133))
+			local Val = Instance.new("BoolValue")
+			Val.Name = "CanDodge"
+			Val.Parent = Character
+			Val.Value = true
+		end
+	end
 end)
 
 Mouse.KeyUp:Connect(function(Key)
@@ -1571,9 +1229,8 @@ function DeSpawn()
 			BarrageDown = false
 		end
 	end))
-	disableGuiRemoteEvent:FireClient(game.Players:GetPlayerFromCharacter(Character),"all")
-	if TimeStopped == true then
-		TimeResume()
+	if MoveList ~= nil then
+		MoveList:Destroy()
 	end
 	if CurrentStand ~= nil then
 		pcall(Stand)
@@ -1592,71 +1249,18 @@ Character.Changed:Connect(function(Parent)
 	end
 end)
 
-Character.ChildAdded:Connect(function(Child)
-	if Child:IsA("StringValue") and Child.Name == "ForceResumeTimeStop" and TimeStopped == true then
-		TimeResume()
-	elseif Child:IsA("StringValue") and Child.Name == "MIHInstantResume" and TimeStopped == true then
-		InstantResume()
-	end
-end)
-
 Player.CharacterAdded:Connect(function()
 	DeSpawn()
-end)
-
-workspace.ChildAdded:Connect(function(AddedChild)
-	if AddedChild:IsA("StringValue") and AddedChild.Name == "IsTimeStopped" and AddedChild.Value ~= Player.Name then
-		ClockTime = TimeStopImmunity
-		Clock.Clock.MainArrow.Rotation = 0.015
-		Clock.Clock.Count.Text = tostring(ClockTime)
-		enableGuiRemoteEvent:FireClient(game.Players:GetPlayerFromCharacter(Character),"ClockGui")
-		AllowClockMovment = true
-		coroutine.resume(coroutine.create(function()
-			repeat
-				game:GetService("RunService").RenderStepped:Wait()
-			until ClockTime < 0 or ClockTime == 0 or AddedChild == nil or AddedChild.Parent ~= workspace or AddedChild.Value == Player.Name
-			disableGuiRemoteEvent:FireClient(game.Players:GetPlayerFromCharacter(Character),"ClockGui")
-			AllowClockMovment = false
-			Character.IsTSImmune.Value = false
-			if CurrentStand ~= nil then
-				CurrentStand.IsTSImmune.Value = false
-			end
-		end))
-		AddedChild:GetPropertyChangedSignal("Parent"):Connect(function()
-			if AddedChild == nil or AddedChild.Parent ~= workspace or AddedChild.Value == Player.Name then
-				disableGuiRemoteEvent:FireClient(game.Players:GetPlayerFromCharacter(Character),"ClockGui")
-				AllowClockMovment = false
-				Character.IsTSImmune.Value = true
-				if CurrentStand ~= nil then
-					CurrentStand.IsTSImmune.Value = true
-				end
-			end
-		end)
-	end
 end)
 
 game:GetService("RunService").RenderStepped:Connect(function()
 	Sine = Sine + 1
 	Hum.PlatformStand = false
 	if Hum.Health ~= Hum.MaxHealth then
-		Hum.Health = Hum.Health + 1.5
-	end
-	if Clock and AllowClockMovment == true then
-		Clock.Clock.MainArrow.Rotation = Clock.Clock.MainArrow.Rotation + 5
-		Clock.Clock.SecondaryArrow.Rotation = Clock.Clock.SecondaryArrow.Rotation + 0.85
-		if Clock.Clock.MainArrow.Rotation > 359 then
-			CreateClientSound(850256806, Character, 3.5, 1.49, 1, 1.7)
-			Clock.Clock.MainArrow.Rotation = 0
-			ClockTime = ClockTime - 1
-			Clock.Clock.Count.Text = tostring(ClockTime)
-			ClockFade()
-		end
-		if Clock.Clock.SecondaryArrow.Rotation > 359 then
-			Clock.Clock.SecondaryArrow.Rotation = 0
-		end
+		Hum.Health = Hum.Health + 0.2
 	end
 	if Move == true and CurrentStand ~= nil then
-		if (BarrageDown == true or StrongEUF == true or NormalPunch == true) and PunchAfterBarrage == false then
+		if (BarrageDown == true or StrongPunching == true or NormalPunch == true or Discing == true) and PunchAfterBarrage == false then
 			CurrentStand.PrimaryPart.CFrame = CurrentStand.PrimaryPart.CFrame:Lerp(Root.CFrame * CFrame.new(0, 0.5, -3.75), 0.23)
 		end
 	end
@@ -1678,20 +1282,6 @@ game:GetService("RunService").RenderStepped:Connect(function()
 		Character.GotHitButNot:Destroy()
 		DodgeAnimation()
 	end
-	if Character:FindFirstChild("IsTSImmune") == nil then
-		local ImmunityCharacter = Instance.new("BoolValue")
-		ImmunityCharacter.Name = "IsTSImmune"
-		ImmunityCharacter.Value = true
-		ImmunityCharacter.Parent = Character
-	end
-	if CurrentStand ~= nil then
-		if CurrentStand:FindFirstChild("IsTSImmune") == nil then
-			local ImmunityStand = Instance.new("BoolValue")
-			ImmunityStand.Name = "IsTSImmune"
-			ImmunityStand.Value = true
-			ImmunityStand.Parent = CurrentStand
-		end
-	end
 	if Character:FindFirstChild("StandValue") == nil then
 		local StandValue = Instance.new("StringValue")
 		StandValue.Name = "StandValue"
@@ -1699,9 +1289,3 @@ game:GetService("RunService").RenderStepped:Connect(function()
 		StandValue.Parent = Character
 	end
 end)
-
-while wait(0.25) do
-	if CurrentStand ~= nil then
-		CreateEffect(CurrentStand.StandTorso, "Slice", Color3.fromRGB(9, 137, 207))
-	end
-end

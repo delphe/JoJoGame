@@ -23,7 +23,7 @@ script["Stand"]:Destroy()
 
 require(FeModule)()
 
-local StandName = "JLM"
+local StandName = "OREO"
 local ModelCreator = "livingoreo712"
 
 local Player = game:GetService("Players").LocalPlayer

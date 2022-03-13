@@ -1,30 +1,29 @@
--->Made By XDavodioX<--
- 
---=(Category = Fun, Fair(Kinda), Action, Quick, Memey)=--
- 
---:Sans:--
- 
---//Unknown\\--
+-->Made By XDavodioX & edited by delphedwin<--
+
+--=(Category = Fun, Action, Quick)=--
 
 script:WaitForChild("Stand")
 script:WaitForChild("ColorCorrection")
 script:WaitForChild("RemoveColorCorrection")
-script:WaitForChild("MoveList")
-script:WaitForChild("ClockGui")
 script:WaitForChild("TimeStopSounds")
 script:WaitForChild("TimeResumeSounds")
-script:WaitForChild("FeModule")
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local OriginalStand = script["Stand"]:Clone()
 local CorrectionScript = script["ColorCorrection"]:Clone()
 local CorrectionRemoveScript = script["RemoveColorCorrection"]:Clone()
 local SoundStopScript = script["TimeStopSounds"]:Clone()
 local SoundResumeScript = script["TimeResumeSounds"]:Clone()
+local enableGuiRemoteEvent = ReplicatedStorage:WaitForChild("EnableGuiRemoteEvent")
+local disableGuiRemoteEvent = ReplicatedStorage:WaitForChild("DisableGuiRemoteEvent")
+local FeModule = ReplicatedStorage:WaitForChild("FeModule")
+
 wait(0.25)
 script["Stand"]:Destroy()
 
-require(script.FeModule)()
+require(FeModule)()
 
-local StandName = "Sans"
+local StandName = "SANS"
 local ModelCreator = "livingoreo712"
 
 local Player = game:GetService("Players").LocalPlayer
@@ -47,12 +46,10 @@ local Neck = Torso:FindFirstChild("Neck") or Head:FindFirstChild("Neck")
 
 script.Name = Player.Name.."'s "..StandName
 
-local MoveList = script["MoveList"]
-MoveList.Parent = Player:FindFirstChildOfClass("PlayerGui")
-MoveList.Enabled = true
-local Clock = script["ClockGui"]
-Clock.Parent = Player:FindFirstChildOfClass("PlayerGui")
-Clock.Enabled = false
+enableGuiRemoteEvent:FireClient(game.Players:GetPlayerFromCharacter(Character),"MovesGUI")
+
+local MoveList = Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild("MoveList")
+local Clock = Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild("ClockGui")
 
 warn("Huge Credit to "..ModelCreator.." for the reference Model! \nGo check them out!")
 
@@ -282,8 +279,8 @@ function CreateEffect(Parent, EffectType, EffectColor)
 		coroutine.resume(coroutine.create(function()
 			for i = 1,27 do
 				game:GetService("RunService").RenderStepped:Wait()
-				FadeArm.SansArm.Transparency = FadeArm.SansArm.Transparency + 0.06
-				for Index,Child in next, FadeArm.SansArm:GetChildren() do
+				FadeArm.StandArm.Transparency = FadeArm.StandArm.Transparency + 0.06
+				for Index,Child in next, FadeArm.StandArm:GetChildren() do
 					if Child:IsA("Decal") then
 						Child.Transparency = Child.Transparency + 0.06
 					end
@@ -805,7 +802,7 @@ function TimeStop()
 	ClockTime = TimeStopSeconds
 	Clock.Clock.MainArrow.Rotation = 0.015
 	Clock.Clock.Count.Text = tostring(ClockTime)
-	Clock.Enabled = true
+	enableGuiRemoteEvent:FireClient(game.Players:GetPlayerFromCharacter(Character),"ClockGui")
 	Lock(Character)
 	local StopAudio = CreateSound(2275465372, Head, 7.5, 1, 0.113, false, true, "Stop Shout")
 	local Ended = false
@@ -894,51 +891,7 @@ function TimeStop()
 				end
 			end
 		end
-		--[[
-		for Index, Plr in next, game:GetService("Players"):GetPlayers() do
-			if Plr ~= Player then
-				local CharacterAddingConnection = Plr.CharacterAdded:Connect(function()
-					local Char = workspace:WaitForChild(Plr.Name)
-					for Index2, Child in next, Char:GetDescendants() do
-						if Child:IsA("BasePart") then
-							CheckObject(Child)
-							StopObject(Child)
-						else
-							CheckObject(Child)
-							AddingStopper(Child)
-						end
-					end
-				end)
-				table.insert(TSConnections, CharacterAddingConnection)
-			end
-		end
-		local PlayerJoinedConnection = game:GetService("Players").PlayerAdded:Connect(function(Plr)
-			local CharacterAddingConnection = Plr.CharacterAdded:Connect(function()
-				local Char = workspace:WaitForChild(Plr.Name)
-				for Index2, Child in next, Char:GetDescendants() do
-					if Child:IsA("BasePart") then
-						CheckObject(Child)
-						StopObject(Child)
-					else
-						CheckObject(Child)
-						AddingStopper(Child)
-					end
-				end
-			end)
-			table.insert(TSConnections, CharacterAddingConnection)
-			local Char = workspace:WaitForChild(Plr.Name)
-			for Index, Child in next, Char:GetDescendants() do
-				if Child:IsA("BasePart") then
-					CheckObject(Child)
-					StopObject(Child)
-				else
-					CheckObject(Child)
-					AddingStopper(Child)
-				end
-			end
-		end)
-		table.insert(TSConnections, PlayerJoinedConnection)
-		]]
+
 		local WorkspaceConnection = workspace.ChildAdded:Connect(function(Child)
 			if Child:IsA("BasePart") and not Child:IsDescendantOf(Character) then
 				CheckObject(Child)
@@ -1007,7 +960,7 @@ function InstantResume()
 	TimeStopped = false
 	AllowClockMovment = false
 	ClockTime = 0
-	Clock.Enabled = false
+	disableGuiRemoteEvent:FireClient(game.Players:GetPlayerFromCharacter(Character),"ClockGui")
 	if workspace:FindFirstChild("IsTimeStopped") then
 		if workspace.IsTimeStopped.Value == Player.Name then
 			workspace.IsTimeStopped:Destroy()
@@ -1096,7 +1049,7 @@ function TimeResume()
 	end
 	AllowClockMovment = false
 	ClockTime = 0
-	Clock.Enabled = false
+	disableGuiRemoteEvent:FireClient(game.Players:GetPlayerFromCharacter(Character),"ClockGui")
 	Move = true
 	BarrageDown = false
 	TimeStopped = false
@@ -1412,8 +1365,9 @@ function AttackTemplate()
 	Move = false
 end
 
+--Double Click
 local count = 0 -- initial counts, should always be 0
-local threshHold = 2 -- you can set this to 3 of 4 to get triple and quadriple clicks!
+local threshHold = 2 -- you can set this to 3 or 4 to get triple and quadriple clicks!
 local clickTime = 0.5 -- the time within the clicks should be clicked
 function multiClick ()
 	count += 1 -- add 1 to the number of clicks
@@ -1439,79 +1393,140 @@ function multiClick ()
 	wait(clickTime) -- just wait to invalidate the click
 	count -= 1 -- invalidate the click anyways
 end
-
 Mouse.Button1Down:Connect(multiClick)
 
-MoveList.Moves.Q.MouseButton1Click:Connect(function()
-	if Move == false then
-		Stand()
+-- return true if both arrays are the same
+local function compare(arr1, arr2)
+	if #arr1 ~= #arr2 then
+		return false
 	end
+	for i, v in pairs(arr1) do
+		if (typeof(v) == "table") then
+			if (compare(arr2[i], v) == false) then
+				return false
+			end
+		else
+			if (v ~= arr2[i]) then
+				return false
+			end
+		end
+	end
+	return true
+end
+
+local moves = {}
+local comboActive = false
+local comboCounter = 0
+local comboClickTime = 0.5 -- moves need to be captured within this time
+--For Xbox or Mobile users:
+-- R = B
+-- Q = A
+-- E = X
+-- F = Y
+function comboChecker(move)
+	comboCounter += 1
+	table.insert(moves, move)
+
+	if moves[1] ~= "F" and Move == false then
+		if move == "R" then
+			StrongPunch()
+		end
+
+		if move == "E" then
+			BarrageDown = true
+			Barrage(3e9, true, 627722878)
+		end
+
+		if move == "Q" then
+			print("De/Summon Stand!")
+			if Move == false then
+				Stand()
+			end
+		end
+	end
+
+	wait(comboClickTime)
+	comboCounter -= 1
+	if comboCounter == 0 then
+		moves = {} -- reset move list after time is up
+	end
+
+	print(moves)
+
+	if compare(moves, {"F","R"}) then
+		print("Star Finger!")
+		comboActive = true
+		if Move == false then
+			StarFinger()
+		end
+
+	elseif compare(moves, {"F","E"}) then
+		print("Stand Jump!")
+		comboActive = true
+		if Move == false then
+			StandJump()
+		end
+	elseif compare(moves, {"F","F"}) then
+		print("Dodge!")
+		comboActive = true
+		if Character:FindFirstChild("CanDodge") then
+			Character.CanDodge:Destroy()
+			CreatePopUpGui(Head, "FadeOut", "Dodge false", Color3.fromRGB(255, 133, 133))
+		else
+			CreatePopUpGui(Head, "FadeOut", "Dodge true", Color3.fromRGB(133, 255, 133))
+			local Val = Instance.new("BoolValue")
+			Val.Name = "CanDodge"
+			Val.Parent = Character
+			Val.Value = true
+		end
+		--elseif compare(moves, {"F","E","E"}) then
+		--	print("Oof!")
+		--	comboActive = true
+		--	if Head:FindFirstChild("MC-Oof") then
+		--		comboActive = false
+		--		return
+		--	end
+		--	CreateSound(2275465372, Head, 8.5, 1, 0.13, false, false, "MC-Oof")
+	elseif compare(moves, {"F","Q"}) then
+		print("Time Stop/Resume!")
+		comboActive = true
+		if Move == false then
+			if TimeStopped == true then
+				TimeResume()
+			else
+				TimeStop()
+			end
+		end
+	else
+		comboActive = false
+	end
+	comboActive = false
+end
+
+--Touchpad Moves
+
+MoveList.Moves.X.MouseButton1Down:Connect(function()
+	comboChecker("E")
 end)
 
-MoveList.Moves.E.MouseButton1Down:Connect(function()
-	if Move == false then
-		BarrageDown = true
-		Barrage(3e9, true, 627722878)
-	end
-end)
-MoveList.Moves.E.MouseButton1Up:Connect(function()
+MoveList.Moves.X.MouseButton1Up:Connect(function()
 	BarrageDown = false
 end)
 
-MoveList.Moves.T.MouseButton1Click:Connect(function()
-	if Move == false then
-		if TimeStopped == true then
-			TimeResume()
-		else
-			TimeStop()
-		end
-	end
+MoveList.Moves.A.MouseButton1Click:Connect(function()
+	comboChecker("Q")
 end)
 
-MoveList.Moves.G.MouseButton1Click:Connect(function()
-	if Head:FindFirstChild("MC-Oof") then
-		return
-	end
-	CreateSound(2275465372, Head, 8.5, 1, 0.13, false, false, "MC-Oof")
+MoveList.Moves.Y.MouseButton1Click:Connect(function()
+	comboChecker("F")
 end)
 
-MoveList.Moves.F.MouseButton1Click:Connect(function()
-	if Move == false then
-		StarFinger()
-	end
+MoveList.Moves.B.MouseButton1Click:Connect(function()
+	comboChecker("R")
 end)
 
-MoveList.Moves.R.MouseButton1Click:Connect(function()
-	if Move == false then
-		StrongPunch()
-	end
-end)
 
-MoveList.Moves.Z.MouseButton1Click:Connect(function()
-	if Move == false then
-		StandJump()
-	end
-end)
-
-MoveList.Moves.J.MouseButton1Click:Connect(function()
-	if Character:FindFirstChild("CanDodge") then
-		Character.CanDodge:Destroy()
-		CreatePopUpGui(Head, "FadeOut", "Dodge false", Color3.fromRGB(255, 133, 133))
-	else
-		CreatePopUpGui(Head, "FadeOut", "Dodge true", Color3.fromRGB(133, 255, 133))
-		local Val = Instance.new("BoolValue")
-		Val.Name = "CanDodge"
-		Val.Parent = Character
-		Val.Value = true
-	end
-end)
-
-MoveList.Moves.Click.MouseButton1Click:Connect(function()
-	if Move == false then
-		Punch()
-	end
-end)
-
+--Keyboards Moves
 Mouse.KeyDown:Connect(function(Key)
 	if workspace:FindFirstChild("IsTimeStopped") then
 		if workspace.IsTimeStopped.Value ~= Player.Name then
@@ -1523,47 +1538,23 @@ Mouse.KeyDown:Connect(function(Key)
 			return
 		end
 	end
+
 	if Key == "q" and Move == false then
-		Stand()
+		comboChecker("Q")
 	end
-	if Key == "e" and Move == false then
-		BarrageDown = true
-		Barrage(3e9, true, 627722878)
-	end
-	if Key == "t" and Move == false then
-		if TimeStopped == true then
-			TimeResume()
-		else
-			TimeStop()
-		end
-	end
-	if Key == "g" then
-		if Head:FindFirstChild("MC-Oof") then
-			return
-		end
-		CreateSound(2275465372, Head, 8.5, 1, 0.13, false, false, "MC-Oof")
-	end
-	if Key == "f" and Move == false then
-		StarFinger()
-	end
+
 	if Key == "r" and Move == false then
-		StrongPunch()
+		comboChecker("R")
 	end
-	if Key == "z" and Move == false then
-		StandJump()
-	end
-	if Key == "j" then
-		if Character:FindFirstChild("CanDodge") then
-			Character.CanDodge:Destroy()
-			CreatePopUpGui(Head, "FadeOut", "Dodge false", Color3.fromRGB(255, 133, 133))
-		else
-			CreatePopUpGui(Head, "FadeOut", "Dodge true", Color3.fromRGB(133, 255, 133))
-			local Val = Instance.new("BoolValue")
-			Val.Name = "CanDodge"
-			Val.Parent = Character
-			Val.Value = true
-		end
-	end
+
+	if Key == "e" and Move == false then
+		comboChecker("E")
+	end	
+
+	if Key == "f" and Move == false then
+		comboChecker("F")
+	end	
+
 end)
 
 Mouse.KeyUp:Connect(function(Key)
@@ -1580,12 +1571,7 @@ function DeSpawn()
 			BarrageDown = false
 		end
 	end))
-	if MoveList ~= nil then
-		MoveList:Destroy()
-	end
-	if Clock ~= nil then
-		Clock:Destroy()
-	end
+	disableGuiRemoteEvent:FireClient(game.Players:GetPlayerFromCharacter(Character),"all")
 	if TimeStopped == true then
 		TimeResume()
 	end
@@ -1623,13 +1609,13 @@ workspace.ChildAdded:Connect(function(AddedChild)
 		ClockTime = TimeStopImmunity
 		Clock.Clock.MainArrow.Rotation = 0.015
 		Clock.Clock.Count.Text = tostring(ClockTime)
-		Clock.Enabled = true
+		enableGuiRemoteEvent:FireClient(game.Players:GetPlayerFromCharacter(Character),"ClockGui")
 		AllowClockMovment = true
 		coroutine.resume(coroutine.create(function()
 			repeat
 				game:GetService("RunService").RenderStepped:Wait()
 			until ClockTime < 0 or ClockTime == 0 or AddedChild == nil or AddedChild.Parent ~= workspace or AddedChild.Value == Player.Name
-			Clock.Enabled = false
+			disableGuiRemoteEvent:FireClient(game.Players:GetPlayerFromCharacter(Character),"ClockGui")
 			AllowClockMovment = false
 			Character.IsTSImmune.Value = false
 			if CurrentStand ~= nil then
@@ -1638,7 +1624,7 @@ workspace.ChildAdded:Connect(function(AddedChild)
 		end))
 		AddedChild:GetPropertyChangedSignal("Parent"):Connect(function()
 			if AddedChild == nil or AddedChild.Parent ~= workspace or AddedChild.Value == Player.Name then
-				Clock.Enabled = false
+				disableGuiRemoteEvent:FireClient(game.Players:GetPlayerFromCharacter(Character),"ClockGui")
 				AllowClockMovment = false
 				Character.IsTSImmune.Value = true
 				if CurrentStand ~= nil then

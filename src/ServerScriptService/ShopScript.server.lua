@@ -1,29 +1,33 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
 local remoteEvent = ReplicatedStorage:WaitForChild("ShopRemoteEvent")
 
+shared["onGiveParticle"] = function(player, particle)
+	onGiveParticle(player, particle)
+end
+
 -- Give player a particle from ServerStorage
-local function onGiveParticle(player, particle)
+function onGiveParticle(player, particle)
 	--print(player.Name .. " fired the remote event")
 	--print("particle: " .. particle)
 	local Character = player.Character
+	local rightArm
+	local leftArm
 	if Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
-		game.ServerStorage[particle]:Clone().Parent = Character.RightLowerArm
-		game.ServerStorage[particle]:Clone().Parent = Character.RightLowerArm
-		game.ServerStorage[particle]:Clone().Parent = Character.RightLowerArm
-		game.ServerStorage[particle]:Clone().Parent = Character.LeftLowerArm
-		game.ServerStorage[particle]:Clone().Parent = Character.LeftLowerArm
-		game.ServerStorage[particle]:Clone().Parent = Character.LeftLowerArm
+		rightArm = Character:WaitForChild("RightLowerArm")
+		leftArm = Character:WaitForChild("LeftLowerArm")
+
 	else
-		game.ServerStorage[particle]:Clone().Parent = Character['Right Arm']
-		game.ServerStorage[particle]:Clone().Parent = Character['Right Arm']
-		game.ServerStorage[particle]:Clone().Parent = Character['Right Arm']
-		game.ServerStorage[particle]:Clone().Parent = Character['Left Arm']
-		game.ServerStorage[particle]:Clone().Parent = Character['Left Arm']
-		game.ServerStorage[particle]:Clone().Parent = Character['Left Arm']
+		rightArm = Character:WaitForChild("Right Arm")
+		leftArm = Character:WaitForChild("Left Arm")
 	end
-	
+	game.ServerStorage[particle]:Clone().Parent = rightArm
+	game.ServerStorage[particle]:Clone().Parent = rightArm
+	game.ServerStorage[particle]:Clone().Parent = rightArm
+	game.ServerStorage[particle]:Clone().Parent = leftArm
+	game.ServerStorage[particle]:Clone().Parent = leftArm
+	game.ServerStorage[particle]:Clone().Parent = leftArm
+
+	player.inventory.Hamon.Value = true
 end
 
--- Call "onCreatePart()" when the client fires the remote event
 remoteEvent.OnServerEvent:Connect(onGiveParticle)

@@ -10,36 +10,13 @@ Tool.Equipped:Connect(function()
 end)
 
 function KillStandScript()
-	local StandScript = Player.Character[Player.Name.."'s "..Player.Character["StandValue"].Value]
-	StandScript.Disabled = true
-	StandScript:Destroy()
-	Player.Character.StandValue:Destroy()
-	if Player.Character:FindFirstChild("CanDodge") then
-		Player.Character.CanDodge:Destroy()
-	end
-	if Player.Character:FindFirstChild("IsTSImmune") then
-		Player.Character.IsTSImmune:Destroy()
-	end
-	if Player.Character:FindFirstChild("CanDodgeInTS") then
-		Player.Character.CanDodgeInTS:Destroy()
-	end
-	if Player.Character.Head:FindFirstChild("Stand") then
-		Player.Character.Head.Stand:Destroy()
-	end
-	Player.Character.StandInputClient.Disabled = true
-	Player.Character.StandInputClient:Destroy()
-	Player.Character.StandInput:Destroy()
-	Player.Character.GetClientPropertyStandInput:Destroy()
-	if Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild("MoveList") then
-		Player:FindFirstChildOfClass("PlayerGui")["MoveList"]:Destroy()
-	end
-	if Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild("ClockGui") then
-		Player:FindFirstChildOfClass("PlayerGui")["ClockGui"]:Destroy()
-	end
+	repeat wait() until shared["removeStand"]
+	shared.removeStand(Player)	
 end
 
 Tool.Activated:Connect(function()
 	if Use == true and Player.Character:FindFirstChild("StandValue") and workspace:FindFirstChild("IsTimeStopped") == nil and workspace:FindFirstChild("IsTimeErased") == nil and workspace:FindFirstChild("IsTimeAccelerating") == nil then
+		--TODO: Use existing stands. These are all archived
 		if Player.Character["StandValue"].Value == "C-Moon" then
 			Use = false
 			Tool.Handle.HeavenParticles.Enabled = true
