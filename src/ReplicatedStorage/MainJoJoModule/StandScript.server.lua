@@ -2,31 +2,22 @@
 
 --=(Category = Fun, Action, Quick)=--
 
-script:WaitForChild("Stand")
-script:WaitForChild("ColorCorrection")
-script:WaitForChild("RemoveColorCorrection")
-script:WaitForChild("TimeStopSounds")
-script:WaitForChild("TimeResumeSounds")
+warn("Huge Credit to XDavodioX for the reference script & livingoreo712 for many of the models! \nGo check them out!")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local OriginalStand = script["Stand"]:Clone()
-local CorrectionScript = script["ColorCorrection"]:Clone()
-local CorrectionRemoveScript = script["RemoveColorCorrection"]:Clone()
-local SoundStopScript = script["TimeStopSounds"]:Clone()
-local SoundResumeScript = script["TimeResumeSounds"]:Clone()
+local CorrectionScript = ReplicatedStorage:WaitForChild("MainJoJoModule"):WaitForChild("ColorCorrection"):Clone()
+local CorrectionRemoveScript =ReplicatedStorage:WaitForChild("MainJoJoModule"):WaitForChild("RemoveColorCorrection"):Clone()
+local SoundStopScript = ReplicatedStorage:WaitForChild("MainJoJoModule"):WaitForChild("TimeStopSounds"):Clone()
+local SoundResumeScript =  ReplicatedStorage:WaitForChild("MainJoJoModule"):WaitForChild("TimeResumeSounds"):Clone()
 local enableGuiRemoteEvent = ReplicatedStorage:WaitForChild("EnableGuiRemoteEvent")
 local disableGuiRemoteEvent = ReplicatedStorage:WaitForChild("DisableGuiRemoteEvent")
+
 local FeModule = ReplicatedStorage:WaitForChild("FeModule")
-
-wait(0.25)
-script["Stand"]:Destroy()
-
 require(FeModule)()
 
-local StandName = "JLM"
-local ModelCreator = "livingoreo712"
-
 local Player = game:GetService("Players").LocalPlayer
+local StandName = Player:WaitForChild("stand").Value
+local OriginalStand = ReplicatedStorage:WaitForChild("MainJoJoModule"):WaitForChild(StandName):Clone()
 local Mouse = Player:GetMouse()
 local Character = Player.Character
 local Root = Character.HumanoidRootPart
@@ -50,8 +41,6 @@ enableGuiRemoteEvent:FireClient(game.Players:GetPlayerFromCharacter(Character),"
 
 local MoveList = Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild("MoveList")
 local Clock = Player:FindFirstChildOfClass("PlayerGui"):FindFirstChild("ClockGui")
-
-warn("Huge Credit to "..ModelCreator.." for the reference Model! \nGo check them out!")
 
 local AttackSpeed = 1
 local Sine = 0
@@ -119,7 +108,7 @@ function CreateClientSound(ID, Parent, Volume, TimePosition, Pitch, DebrisTime)
 	local NEWCLIENTSOUND = nil
 	local NEWCLIENTSOUNDDATA = nil
 	coroutine.resume(coroutine.create(function()
-		NEWCLIENTSOUNDDATA = script["ClientSound"]
+		NEWCLIENTSOUNDDATA = ReplicatedStorage:WaitForChild("MainJoJoModule"):WaitForChild("ClientSound"):Clone()
 		local pt = NEWCLIENTSOUNDDATA:WaitForChild("SoundParent")
 		local si = NEWCLIENTSOUNDDATA:WaitForChild("SoundID")
 		local vo = NEWCLIENTSOUNDDATA:WaitForChild("SoundVolume")

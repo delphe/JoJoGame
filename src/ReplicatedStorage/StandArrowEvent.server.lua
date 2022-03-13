@@ -43,50 +43,6 @@ else
 	end
 end
 
-
---if omg ~= 1000 then
---	if Chance < 50 then
---		local Rand = math.random(1, 6)
---		if Rand == 1 then
---			require(StandRequire)("TH", Player.Name)
---		elseif Rand == 2 then
---			require(StandRequire)("WS", Player.Name)
---		elseif Rand == 3 then
---			require(StandRequire)("KC", Player.Name)
---		--[[
---		elseif Rand == 4 then
---			local Rand2 = math.random(1, 3)
---			if Rand2 == 1 then
---				require(StandRequire)("NP", Player.Name)
---			elseif Rand2 == 2 then
---				require(StandRequire)("FP", Player.Name)
---			elseif Rand2 == 3 then
---				require(StandRequire)("STV", Player.Name)
---			end
---		--]]
---		elseif Rand == 4 then
---			require(StandRequire)("GE", Player.Name)
---		elseif Rand == 5 then
---			require(StandRequire)("KQ", Player.Name)
---		elseif Rand == 6 then
---			Player.Character:BreakJoints()
---		end
---	elseif Chance > 50 and Chance < 101 then
---		local Rand = math.random(1, 4)
---		if Rand == 1 then
---			require(StandRequire)("CD", Player.Name)
---		elseif Rand == 2 then
---			require(StandRequire)("SP", Player.Name)
---		elseif Rand == 3 then
---			require(StandRequire)("TW", Player.Name)
---		elseif Rand == 4 then
---			require(StandRequire)("SC", Player.Name)
---		end
---	end
---else
---	require(StandRequire)("MTW", Player.Name)
---end
-
 wait(1.55)
 
 Torso.Anchored = Anchored

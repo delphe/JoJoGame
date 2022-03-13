@@ -9,7 +9,7 @@ local storeStandEvent = ReplicatedStorage:WaitForChild("StoreStandEvent")
 local standImagRemoteFunction = ReplicatedStorage:WaitForChild("StandImagRemoteFunction")
 
 local Debounce = true -- debouce will prevent the function from running again until it's complete.
-local function enableGUI(storageUnit)
+local function storeStand(storageUnit)
 	if Debounce then
 		Debounce = false
 		local standAlreadyStored = false
@@ -64,4 +64,4 @@ local function enableGUI(storageUnit)
 	end
 end
 
-storeStandEvent.Event:Connect(enableGUI)
+storeStandEvent.Event:Connect(storeStand)

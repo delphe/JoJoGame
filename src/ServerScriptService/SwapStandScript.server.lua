@@ -14,6 +14,7 @@ function removeStand(player)
 		StandScript.Disabled = true
 		StandScript:Destroy()
 		player.Character.StandValue:Destroy()
+		local standModel = player.Character.Head:FindFirstChild(player:WaitForChild("stand").Value) 
 		if player.Character:FindFirstChild("CanDodge") then
 			player.Character.CanDodge:Destroy()
 		end
@@ -23,8 +24,8 @@ function removeStand(player)
 		if player.Character:FindFirstChild("CanDodgeInTS") then
 			player.Character.CanDodgeInTS:Destroy()
 		end
-		if player.Character.Head:FindFirstChild("Stand") then
-			player.Character.Head.Stand:Destroy()
+		if standModel then
+			standModel:Destroy()
 		end
 		player.Character.StandInputClient.Disabled = true
 		player.Character.StandInput:Destroy()
