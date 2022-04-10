@@ -1,6 +1,6 @@
 --https://www.youtube.com/watch?v=DkYupSBUpes
 _G.inventoryTable = {"Hamon"}
-_G.standStorageTable = {"OERO","JLM","STEVE","SANS"}
+_G.standStorageTable = {"OERO","JLM","STV","SANS"}
 _G.storageSlots = 10
 local DataStoreService = game:GetService("DataStoreService")
 local myDataStore = DataStoreService:GetDataStore("myDataStore")
@@ -72,6 +72,9 @@ function loadItemIfFound(item, folder, player, itemType)
 end
 
 function loadStandIfFound(player)
+	if player:FindFirstChild("stand") then
+		player.stand:Destroy() --destroy and rebuild stand string if player is reset
+	end
 	local stand = Instance.new("StringValue")
 	stand.Name = "stand"
 	stand.Parent = player
@@ -82,7 +85,7 @@ function loadStandIfFound(player)
 		itemData = myDataStore:GetAsync(player.UserId.."-stand")
 	end)
 
-	if success then
+	if success and itemData ~= nil and itemData ~= "" then
 		stand.Value = itemData
 		if stand.Value then
 			require(StandRequire)(stand.Value, player.Name)
@@ -104,9 +107,9 @@ function loadItemsInStorage(count, storageFolder, player)
 	local success, errormessage = pcall(function()
 		itemData = myDataStore:GetAsync(player.UserId.."-storage"..count)
 	end)
-
-	if success then
-		storageStr.Value = itemData	
+	
+	if success and itemData ~= nil then
+		storageStr.Value = itemData
 	else
 		print("error getting data")
 		warn(errormessage)
@@ -116,6 +119,9 @@ end
 game.Players.PlayerAdded:Connect(function(player)
 	player.CharacterAdded:Connect(function()
 		--inventory
+		if player:FindFirstChild("inventory") then
+			player.inventory:Destroy() --destroy and rebuild inventory folder if player is reset
+		end
 		local inventory = Instance.new("Folder")
 		inventory.Name = "inventory"
 		inventory.Parent = player
@@ -125,6 +131,9 @@ game.Players.PlayerAdded:Connect(function(player)
 		end
 		
 		--storage
+		if player:FindFirstChild("storage") then
+			player.storage:Destroy() --destroy and rebuild storage folder if player is reset
+		end
 		local storageFolder = Instance.new("Folder")
 		storageFolder.Name = "storage"
 		storageFolder.Parent = player

@@ -21,7 +21,9 @@ Arrow.CFrame = Torso.CFrame * CFrame.new(0, 0, -1) * CFrame.Angles(math.rad(90),
 Arrow.Anchored = true
 
 local Sound = Instance.new("Sound")
-Sound.SoundId = "rbxassetid://2782131222"
+Sound.SoundId = "rbxassetid://1382489817"
+--TODO: fix sound
+--Sound.SoundId = "rbxassetid://2782131222"
 Sound.Volume = 5.45
 Sound.PlaybackSpeed = 0.985
 Sound.Looped = false
@@ -31,13 +33,15 @@ game:GetService("Debris"):AddItem(Sound, Sound.TimeLength + 1)
 
 if RunService:IsStudio() then
 	--Running in test mode. Load up the stand you're wanting to test out
-	require(StandRequire)("OREO", Player.Name)
+	require(StandRequire)("STV", Player.Name)
 else
 	--This block of code will NOT be hit when testing in Roblox Studio
 	--TODO: add all other stands as they are created
-	local Rand = math.random(1, 2)
+	local Rand = math.random(1, 3)
 	if Rand == 1 then
 		require(StandRequire)("OREO", Player.Name)
+	elseif Rand == 2 then
+		require(StandRequire)("FLAV", Player.Name)
 	else
 		require(StandRequire)("STV", Player.Name)
 	end

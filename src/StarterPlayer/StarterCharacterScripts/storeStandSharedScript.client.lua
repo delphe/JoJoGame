@@ -1,9 +1,9 @@
 local player = game.Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local requiemArrowEvent = ReplicatedStorage:WaitForChild("RequiemArrowEvent"):Clone()
-local swapStandRemoteEvent = ReplicatedStorage:WaitForChild("SwapStandRemoteEvent")
-local removeStandRemoteEvent = ReplicatedStorage:WaitForChild("RemoveStandRemoteEvent")
-local giveStandRemoteEvent = ReplicatedStorage:WaitForChild("GiveStandRemoteEvent")
+local swapStandEvent = ReplicatedStorage:WaitForChild("SwapStandEvent")
+local removeStandEvent = ReplicatedStorage:WaitForChild("RemoveStandEvent")
+local giveStandEvent = ReplicatedStorage:WaitForChild("GiveStandEvent")
 local standStorageRemoteEvent = ReplicatedStorage:WaitForChild("StandStorageRemoteEvent")
 local storeStandEvent = ReplicatedStorage:WaitForChild("StoreStandEvent")
 local standImagRemoteFunction = ReplicatedStorage:WaitForChild("StandImagRemoteFunction")
@@ -43,17 +43,17 @@ local function storeStand(storageUnit)
 			requiemArrowEvent.ToGive.Value = storageUnitValue
 			requiemArrowEvent.Parent = game:GetService("ServerScriptService")
 			requiemArrowEvent.Disabled = false
-			swapStandRemoteEvent:FireServer(requiemArrowEvent.ToGive.Value)
+			swapStandEvent:Fire(player,requiemArrowEvent.ToGive.Value)
 		elseif standAlreadyStored == false and playersExistingStand ~= "" then
 			--print("player has a stand and wants to store it")
-			removeStandRemoteEvent:FireServer()
+			removeStandEvent:Fire(player)
 		elseif standAlreadyStored and playersExistingStand == "" then
 			--print("stand is stored here but player doesn't have a stand. Give player the stored stand.")
 			requiemArrowEvent.Player.Value = player
 			requiemArrowEvent.ToGive.Value = storageUnitValue
 			requiemArrowEvent.Parent = game:GetService("ServerScriptService")
 			requiemArrowEvent.Disabled = false
-			giveStandRemoteEvent:FireServer(requiemArrowEvent.ToGive.Value)
+			giveStandEvent:Fire(player,requiemArrowEvent.ToGive.Value)
 			storageUnit.Image = "rbxassetid://97544973" -- set image back to default
 		end
 
